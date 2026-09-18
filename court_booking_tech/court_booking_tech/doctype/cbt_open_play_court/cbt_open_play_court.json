@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "creation": "2026-07-24 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "court",
+  "court_name"
+ ],
+ "fields": [
+  {
+   "description": "Must belong to the session's branch.",
+   "fieldname": "court",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Court",
+   "options": "CBT Court",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "court.court_name",
+   "fieldname": "court_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Court Name",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-24 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Open Play Court",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

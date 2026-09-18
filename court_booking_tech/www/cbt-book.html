@@ -1,0 +1,1188 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{% if unavailable %}{{ _("Not available") }}{% else %}{{ book.company_name }}{% endif %}{% endblock %}
+{# B31: the portal topbar is the ONLY header here (frappe's website navbar sat
+   above it as a second one with a blank menu icon on phones). #}
+{% block navbar %}{% endblock %}
+
+{% block page_content %}
+{% if unavailable %}
+{# A printed deep link that no longer resolves — unknown slug OR a suspended
+   facility, deliberately indistinguishable (anti-enumeration). These are the
+   CLIENT's customers arriving from the client's own website, so the page owes
+   them a plain explanation and a way onward, not a 404. #}
+<div class="cbt-wrap">
+	{% include "court_booking_tech/templates/includes/cbt_portal_head.html" %}
+	<div class="cbt-card" id="cbt-unavailable" data-testid="facility-unavailable">
+		<p class="cbt-card-title">{{ _("This facility isn't taking online bookings right now") }}</p>
+		<p class="cbt-card-sub">
+			{{ _("The link you followed may be out of date. You can still find and book courts nearby.") }}
+		</p>
+		<p style="margin-top:1rem">
+			<a class="btn btn-primary" href="/find-court">{{ _("Find a court") }}</a>
+		</p>
+	</div>
+	{% include "court_booking_tech/templates/includes/cbt_portal_foot.html" %}
+</div>
+{% else %}
+<div class="cbt-wrap">
+	{% include "court_booking_tech/templates/includes/cbt_portal_head.html" %}
+
+	<div class="cbt-card{% if book.cover_url %} cbt-card--hero{% endif %}">
+		{# The venue, before the numbers. With more pictures behind it the hero
+		   becomes the door to them (section-29). #}
+		{% if book.cover_url %}
+			{% if book.photo_count %}
+				<button type="button" class="cbt-card-photo-btn" id="cbt-banner-btn"
+					data-testid="facility-photos"
+					data-company="{{ book.company_slug }}"
+					data-branch="{{ book.selected.branch_slug if book.selected else '' }}"
+					aria-label="{{ _('See photos of {0}').format(book.company_name) }}">
+					<img class="cbt-banner" id="cbt-banner" src="{{ book.cover_url }}"
+						alt="{{ book.company_name }}" loading="lazy">
+					<span class="cbt-photo-pill" data-testid="facility-photo-count">{{ _("1 photo") if book.photo_count == 1 else _("{0} photos").format(book.photo_count) }}</span>
+				</button>
+			{% else %}
+				<img class="cbt-banner" id="cbt-banner" src="{{ book.cover_url }}"
+					alt="{{ book.company_name }}" loading="lazy">
+			{% endif %}
+		{% endif %}
+		<div class="cbt-card-head">
+			{% if book.company_logo %}
+				<img class="cbt-logo" src="{{ book.company_logo }}" alt="{{ book.company_name }}">
+			{% else %}
+				<div class="cbt-logo-fallback">{{ book.company_name[0] | upper }}</div>
+			{% endif %}
+			<div style="flex:1;min-width:0">
+				<p class="cbt-card-title" id="cbt-company-name">{{ book.company_name }}</p>
+				<p class="cbt-card-sub" id="cbt-branch-name">
+					{% if book.selected %}{{ book.selected.branch_name }}{% else %}{{ _("Choose a branch") }}{% endif %}
+				</p>
+				{# Backlog B48: when this place is open, under its name — the one
+				   line the customer used to have to infer from a greyed-out grid. #}
+				{% if book.selected and book.selected.hours_summary %}
+					<p class="cbt-card-sub cbt-hours" id="cbt-branch-hours" data-testid="branch-hours">{{ book.selected.hours_summary }}</p>
+				{% endif %}
+			</div>
+		</div>
+		{# ---- where to find us (Backlog B37) ---------------------------------
+		   The venue's address is always on screen; the map is folded under it
+		   and Directions opens the phone's own maps app. The iframe carries NO
+		   src until the disclosure is first opened (script below), so a poster
+		   visit never loads Google's frame unless asked. Four states: pin +
+		   address, pin only, address only (no expander), neither (no row). #}
+		{% if book.selected %}
+			{% set where_pin = book.selected.latitude and book.selected.longitude %}
+			{% if where_pin %}
+				<div class="cbt-where" id="cbt-where" data-testid="where" data-pinned="1">
+					<details class="cbt-where-details" id="cbt-where-details">
+						<summary>
+							<span class="cbt-where-label">{{ _("Where to find us") }}</span>
+							{% if book.selected.address_text %}
+								<span class="cbt-where-address" id="cbt-where-address">{{ book.selected.address_text | e }}</span>
+							{% endif %}
+						</summary>
+						<iframe class="cbt-mapembed" id="cbt-where-map"
+							data-src="https://maps.google.com/maps?q={{ book.selected.latitude }},{{ book.selected.longitude }}&amp;output=embed"
+							loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+							title="{{ _('Map') }}"></iframe>
+					</details>
+					<a class="btn btn-default btn-sm cbt-where-directions" id="cbt-where-directions"
+						href="https://www.google.com/maps/dir/?api=1&amp;destination={{ book.selected.latitude }},{{ book.selected.longitude }}"
+						target="_blank" rel="noopener">{{ _("Get directions") }}</a>
+				</div>
+			{% elif book.selected.address_text %}
+				<div class="cbt-where" id="cbt-where" data-testid="where" data-pinned="0">
+					<p class="cbt-card-sub cbt-where-address" id="cbt-where-address">{{ book.selected.address_text | e }}</p>
+				</div>
+			{% endif %}
+		{% endif %}
+		{# ---- "see more of this place" strip (section-22 + Backlog B24) ------
+		   ONE strip for both: the curated gallery (Photos) and the company's own
+		   pages (website / Facebook / Instagram) — the user ruled "it should
+		   combine". Rendered only when there is something to put in it: a
+		   company with no photos AND no links gets no strip at all, never a row
+		   of dead chips. Links are tenant-authored and this page is open to
+		   logged-out visitors, so each one is validated server-side
+		   (cbt_company.clean_public_link) and opens in a NEW TAB with
+		   rel=noopener noreferrer — the booking page stays where it was. #}
+		{% if book.links %}
+			<div class="cbt-more" id="cbt-more" data-testid="company-links">
+				<span class="cbt-small cbt-muted cbt-more-title">{{ _("See more of") }} {{ book.company_name | e }}</span>
+				{% for link in book.links %}
+					<a class="cbt-chip cbt-link" data-kind="{{ link.kind | e }}"
+						data-testid="company-link-{{ link.kind | e }}"
+						href="{{ link.url | e }}" target="_blank"
+						rel="noopener noreferrer">{{ link.label | e }} &#8599;</a>
+				{% endfor %}
+			</div>
+		{% endif %}
+	</div>
+
+	{% if not book.selected %}
+		{# Company slug alone -> the distance-ordered branch chooser (PLAN §5). #}
+		<div id="cbt-branch-chooser">
+			{% for branch in book.branches %}
+				{# The picture is its own target, OUTSIDE the row's link: a button
+				   cannot nest inside an <a> and still be reachable (section-29). #}
+				<div class="cbt-card cbt-chooser-card" data-slug="{{ branch.branch_slug }}">
+				{% if branch.cover_url %}
+					{% if branch.photo_count %}
+						<button type="button" class="cbt-card-photo-btn"
+							data-testid="branch-photos-{{ branch.branch_slug }}"
+							data-company="{{ book.company_slug }}"
+							data-branch="{{ branch.branch_slug }}"
+							aria-label="{{ _('See photos of {0}').format(branch.branch_name) }}">
+							<img class="cbt-card-photo" src="{{ branch.cover_url }}"
+								alt="" loading="lazy">
+							<span class="cbt-photo-pill">{{ _("1 photo") if branch.photo_count == 1 else _("{0} photos").format(branch.photo_count) }}</span>
+						</button>
+					{% else %}
+						<img class="cbt-card-photo" src="{{ branch.cover_url }}" alt="" loading="lazy">
+					{% endif %}
+				{% endif %}
+				<a class="cbt-chooser-link"
+					href="/book?c={{ book.company_slug }}&b={{ branch.branch_slug }}">
+					<p class="cbt-card-title">{{ branch.branch_name }}</p>
+					<p class="cbt-card-sub">{{ branch.address_text or "" }}</p>
+					<div class="cbt-chips">
+						{% if branch.distance_km is not none %}
+							<span class="cbt-distance">{{ "%.1f" | format(branch.distance_km) }} km</span>
+						{% endif %}
+						{# Backlog B48: the same strings the marketplace card prints. #}
+						{% if branch.status_label %}
+							<span class="cbt-badge {{ 'cbt-badge--open' if branch.open_now else 'cbt-badge--closed' }}" data-testid="branch-status">{{ branch.status_label }}</span>
+						{% endif %}
+						{% if branch.hours_summary %}
+							<span class="cbt-hours" data-testid="branch-hours">{{ branch.hours_summary }}</span>
+						{% endif %}
+					</div>
+				</a>
+				</div>
+			{% else %}
+				<div class="cbt-empty">{{ _("This company has no active branches right now.") }}</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		{# B31: the strip first, the arrows + date field UNDER it — real DOM order,
+		   so keyboard focus follows the eye (no CSS `order`). #}
+		<div class="cbt-daterow">
+			<div class="cbt-datestrip" id="cbt-dates" role="group"
+				aria-label="{{ _('Choose a date') }}"></div>
+			<div class="cbt-datenav-row">
+				<button type="button" class="cbt-datenav" id="cbt-date-prev"
+					aria-label="{{ _('Earlier dates') }}">&lsaquo;</button>
+				<button type="button" class="cbt-datenav" id="cbt-date-next"
+					aria-label="{{ _('Later dates') }}">&rsaquo;</button>
+				<input type="date" class="cbt-datejump" id="cbt-date-jump"
+					aria-label="{{ _('Jump to a date') }}">
+			</div>
+		</div>
+		<p class="cbt-small cbt-muted" id="cbt-date-note" hidden></p>
+
+		<div class="cbt-error" id="cbt-error" hidden></div>
+
+		{# ---- court-layout sketch (section-22) ---------------------------
+		   How the courts are actually arranged, from the branch's OWN floor
+		   plan — the same layout_rows/layout_columns + CBT Branch Court Cell
+		   model the desk board has drawn since section-3. Cells with no court
+		   are walkways; that is how 4-3-4 is expressed. Absent entirely when
+		   the branch has no plan configured, which is most of them.
+		   Backlog B32: a <details> that ships CLOSED — open, it pushed the slots
+		   below the fold on every phone visit, for a plan the returning
+		   customer already knows. The summary is the only line they see. #}
+		{% if layout %}
+			<details class="cbt-sketch" id="cbt-sketch" data-testid="court-layout">
+				<summary class="cbt-sketch-title">
+					{{ _("How the courts are laid out") }}
+					<span class="cbt-sketch-count">({% if layout.court_count == 1 %}{{ _("1 court") }}{% else %}{{ _("{0} courts").format(layout.court_count) }}{% endif %})</span>
+				</summary>
+				<p class="cbt-small cbt-muted cbt-sketch-hint">
+					{{ _("Tap a court to jump to it in the grid below") }}
+				</p>
+				<div class="cbt-sketch-grid"
+					style="grid-template-columns:repeat({{ layout.columns }}, minmax(0, 1fr))">
+					{% for row in layout.grid %}{% for cell in row %}
+						{% if cell %}
+							<button type="button" class="cbt-sketch-court"
+								data-court="{{ cell.court }}"
+								title="{{ cell.court_name }}">{{ cell.court_name }}</button>
+						{% else %}
+							<div class="cbt-sketch-gap" aria-hidden="true"></div>
+						{% endif %}
+					{% endfor %}{% endfor %}
+				</div>
+			</details>
+		{% endif %}
+
+		<div id="cbt-grid" aria-live="polite">
+			<div class="cbt-skeleton"></div>
+			<div class="cbt-skeleton"></div>
+		</div>
+
+		{# B53: what this facility does with a paid booking it cannot honour,
+		   printed where the money is committed. Absent entirely at a Refund
+		   company, so nothing new renders for the tenants already live. #}
+		{% if book.refund_note %}
+			<p class="cbt-note cbt-small" id="cbt-refund-note"
+				data-testid="refund-note">{{ book.refund_note }}</p>
+		{% endif %}
+
+		<div class="cbt-checkoutbar" id="cbt-checkoutbar" hidden>
+			<div style="flex:1;min-width:0">
+				<div class="cbt-small cbt-muted" id="cbt-selection-label"></div>
+				<div class="cbt-total" id="cbt-selection-total">&#8369;0</div>
+			</div>
+			<button type="button" class="btn btn-default" id="cbt-clear"
+				data-testid="clear-cart">{{ _("Clear") }}</button>
+			<button type="button" class="btn btn-primary" id="cbt-review">{{ _("Review & book") }}</button>
+		</div>
+	{% endif %}
+	{% include "court_booking_tech/templates/includes/cbt_portal_foot.html" %}
+</div>
+
+{# ---- checkout modal ---------------------------------------------------- #}
+<div class="cbt-modal" id="cbt-checkout" hidden>
+	<div class="cbt-modal-body" role="dialog" aria-modal="true" aria-labelledby="cbt-checkout-title">
+		<div class="cbt-card-head">
+			<h2 class="cbt-card-title" id="cbt-checkout-title" style="flex:1">{{ _("Confirm your booking") }}</h2>
+			<button type="button" class="btn btn-sm" id="cbt-checkout-close" aria-label="{{ _('Close') }}">&times;</button>
+		</div>
+
+		<table class="cbt-lines" id="cbt-quote-lines"></table>
+
+		{# Backlog B39: store credit from a refund, spendable at this facility. #}
+		<div class="cbt-note" id="cbt-credit-row" hidden>
+			<label>
+				<input type="checkbox" id="cbt-use-credit" data-testid="use-credit">
+				{{ _("Use my store credit") }}
+				(<span id="cbt-credit-amount" data-testid="credit-balance"></span>)
+			</label>
+		</div>
+
+		<div class="cbt-note" id="cbt-instructions-box" hidden>
+			<strong>{{ _("How to pay") }}</strong>
+			{# Backlog B29: the company's enabled transfer channels, one radio card
+			   each, the first pre-selected. The customer's pick travels with the
+			   reservation; staff may correct it when they verify the receipt. #}
+			<div class="cbt-channels" id="cbt-channels" role="radiogroup"
+				aria-label="{{ _('Pay through') }}" data-testid="payment-channels"></div>
+			<div class="cbt-instructions" id="cbt-instructions"></div>
+		</div>
+		<p class="cbt-small cbt-muted" id="cbt-hold-note"></p>
+
+		<div class="cbt-error" id="cbt-checkout-error" hidden></div>
+
+		{% if is_guest %}
+			<a class="btn btn-primary btn-block" id="cbt-login-cta">{{ _("Log in to book") }}</a>
+			<a class="btn btn-default btn-block" href="/signup">{{ _("Create an account") }}</a>
+		{% else %}
+			<button type="button" class="btn btn-primary btn-block" id="cbt-reserve">
+				{{ _("Reserve this slot") }}
+			</button>
+		{% endif %}
+	</div>
+</div>
+
+{# ---- confirmation ------------------------------------------------------ #}
+<div class="cbt-modal" id="cbt-confirmed" hidden>
+	<div class="cbt-modal-body" role="dialog" aria-modal="true" aria-labelledby="cbt-confirmed-title">
+		<h2 class="cbt-card-title" id="cbt-confirmed-title">{{ _("Slot reserved — now send your payment") }}</h2>
+		<p class="cbt-card-sub" id="cbt-confirmed-ref"></p>
+		<table class="cbt-lines" id="cbt-confirmed-lines"></table>
+		{# Backlog B37: "where is this?" is asked a second time once the slot is
+		   held — the same Directions link the head card carries, no JS. #}
+		{% if book.selected and book.selected.latitude and book.selected.longitude %}
+			<p class="cbt-small cbt-muted" id="cbt-confirmed-where" data-testid="confirmed-where">
+				{% if book.selected.address_text %}{{ book.selected.address_text | e }} &middot; {% endif %}<a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ book.selected.latitude }},{{ book.selected.longitude }}"
+					target="_blank" rel="noopener">{{ _("Get directions") }}</a>
+			</p>
+		{% endif %}
+		<div class="cbt-note">
+			<strong>{{ _("Time left to pay") }}:</strong>
+			<span class="cbt-countdown" id="cbt-confirmed-countdown">—</span>
+		</div>
+		<div class="cbt-note" id="cbt-confirmed-instructions-box" hidden>
+			<strong>{{ _("How to pay") }}</strong>
+			<div class="cbt-channels" id="cbt-confirmed-channel" data-testid="confirmed-channel"></div>
+			<div class="cbt-instructions" id="cbt-confirmed-instructions"></div>
+		</div>
+		<a class="btn btn-primary btn-block" id="cbt-upload-cta">{{ _("Upload proof now") }}</a>
+		<a class="btn btn-default btn-block" href="/my-bookings">{{ _("Go to my bookings") }}</a>
+	</div>
+</div>
+
+<script>
+	(function () {
+		"use strict";
+
+		var BOOK = {{ book | tojson }};
+		if (!BOOK.selected) return;  // branch chooser view — nothing to wire
+
+		var BRANCH = BOOK.selected.branch;
+		var TODAY = {{ today | tojson }};
+		var SELECTED_DATE = {{ selected_date | tojson }};
+		var IS_GUEST = {{ "true" if is_guest else "false" }};
+		// Backlog B29: the company's enabled transfer channels (public fields
+		// only — label, account details, QR, note), from the same resolver the
+		// page was rendered with. Empty means the facility has switched online
+		// payment off; the server refuses the reserve too.
+		var CHANNELS = BOOK.payment_channels || [];
+
+		var gridBox = document.getElementById("cbt-grid");
+		var dateBox = document.getElementById("cbt-dates");
+		var errorBox = document.getElementById("cbt-error");
+		var bar = document.getElementById("cbt-checkoutbar");
+		var checkout = document.getElementById("cbt-checkout");
+		var confirmed = document.getElementById("cbt-confirmed");
+
+		/* B35 cart: picked["<court>|<date>"] = start times. The client tracks
+		   SLOTS; the server merges them into bookings (section-9 as-built 16). */
+		var state = { date: SELECTED_DATE, data: null, picked: {}, quote: null };
+		var stopCountdown = null;
+		var quoteTimer = null;
+
+		function pickKey(court, date) { return court + "|" + date; }
+
+		function isPicked(court, date, start) {
+			return (state.picked[pickKey(court, date)] || []).indexOf(start) !== -1;
+		}
+
+		function togglePick(court, date, start) {
+			var key = pickKey(court, date);
+			var times = (state.picked[key] || []).slice();
+			var at = times.indexOf(start);
+			if (at === -1) times.push(start); else times.splice(at, 1);
+			if (times.length) state.picked[key] = times; else delete state.picked[key];
+		}
+
+		function cartCount() {
+			return Object.keys(state.picked).reduce(function (total, key) {
+				return total + state.picked[key].length;
+			}, 0);
+		}
+
+		/* One entry per slot, stable order. */
+		function cartItems() {
+			var items = [];
+			Object.keys(state.picked).sort().forEach(function (key) {
+				var parts = key.split("|");
+				state.picked[key].slice().sort().forEach(function (start) {
+					items.push({
+						court: parts[0],
+						booking_date: parts[1],
+						start_time: start,
+						number_of_slots: 1,
+					});
+				});
+			});
+			return items;
+		}
+
+		function esc(value) {
+			var div = document.createElement("div");
+			div.textContent = value == null ? "" : value;
+			return div.innerHTML;
+		}
+		/* BACKLOG B45. `money`, `moneyShort`, `label` and `labelShort` used to be
+		   DEFINED here, and that is exactly how the app ended up with six
+		   renderings of the same hour: the Philippine convention was written into
+		   this page instead of into a function, so every desk surface built after
+		   it printed 06:00 while this one printed 6 AM.
+
+		   They are now names for the ONE implementation — cbt.fmt, from
+		   public/js/cbt_time_format.js, loaded by templates/includes/
+		   cbt_portal_head.html here and by hooks.app_include_js on the desk, and
+		   pinned against court_booking_tech/timeutil.py by
+		   e2e/tests/test_time_language.py. Kept as local names because fifteen
+		   call sites below read them; delegating, never aliasing, so load order
+		   cannot capture an undefined.
+
+		   ⚠ The old `label()` — "1:00 PM" — is GONE, deliberately. One
+		   convention: 6 AM, 6:30 AM, 12 MN, 12 NN, everywhere, which is what the
+		   printed statement has said since 2026-09-04. */
+		function money(value) { return cbt.fmt.money(value); }
+		function moneyShort(value) { return cbt.fmt.moneyShort(value); }
+		function label(hhmmss) { return cbt.fmt.timeShort(hhmmss); }
+		function timeRange(start, end) { return cbt.fmt.timeRange(start, end); }
+		function show(el, text) { el.textContent = text; el.hidden = !text; }
+
+		/* ---- payment channels (Backlog B29) ------------------------------
+		   One card per channel. `pick` renders a radio (checkout); without it
+		   the card is static (the confirmation shows the ONE chosen). */
+		function channelCard(channel, index, pick) {
+			var meta = [];
+			if (channel.account_name) meta.push(esc(channel.account_name));
+			if (channel.account_number) meta.push(esc(channel.account_number));
+			return (
+				'<label class="cbt-channel' + (pick ? "" : " cbt-channel--static") +
+					'" data-channel="' + esc(channel.name) + '">' +
+				(pick
+					? '<input type="radio" name="cbt-channel" value="' + esc(channel.name) +
+						'"' + (index === 0 ? " checked" : "") + ">"
+					: "") +
+				'<span class="cbt-channel-body">' +
+					'<span class="cbt-channel-label">' + esc(channel.label) + "</span>" +
+					(meta.length ? '<span class="cbt-channel-meta">' + meta.join(" &middot; ") + "</span>" : "") +
+					(channel.instructions ? '<span class="cbt-channel-note">' + esc(channel.instructions) + "</span>" : "") +
+				"</span>" +
+				(channel.qr_image
+					// B50: the WRAP (tile + hint) is the control, bound directly by
+					// cbt.bindQrTiles — a document-delegated click never reached an
+					// iPhone tap, and the hint words sat outside the old target.
+					? '<span class="cbt-channel-qr-wrap" role="button" tabindex="0" data-qr-zoom' +
+							' aria-label="' + "{{ _('Enlarge the QR code') }}" + '">' +
+						'<img class="cbt-channel-qr" src="' + esc(channel.qr_image) + '" alt="QR">' +
+						'<span class="cbt-channel-qr-hint cbt-small cbt-muted">' +
+							"{{ _('Tap or click to enlarge') }}" + "</span>" +
+						"</span>"
+					: "") +
+				"</label>"
+			);
+		}
+		function chosenChannel() {
+			var picked = document.querySelector('#cbt-channels input[name="cbt-channel"]:checked');
+			return picked ? picked.value : null;
+		}
+
+		/* ---- date strip (server "today", never the device clock) ---------
+		   All chip math is UTC-anchored to the server's date STRING; the
+		   browser timezone must never touch it. Parsing TODAY as local
+		   midnight and reading it back via toISOString() shifted dataset.date
+		   one day behind the rendered label in every UTC+ timezone (section-12
+		   UAT finding: a Manila customer tapping "Fri 31" booked Thu 30).
+
+		   The strip shows ONE WEEK and pages with ‹ / › (or jumps via the date
+		   field) up to BOOK.advance_booking_days — the same horizon the server
+		   enforces on reserve, so the strip can never offer a date the booking
+		   controller then refuses. A flat 7-day strip was the whole "can I book
+		   three weeks out?" gap: the server always accepted those dates. */
+		var DAY_MS = 86400000;
+		var WINDOW_DAYS = 7;
+		var HORIZON = Math.max(Number(BOOK.advance_booking_days) || 0, 0);
+		var TODAY_MS = utcDayMs(TODAY);
+		var windowStart = 0;  // days from TODAY of the leftmost visible chip
+
+		var prevButton = document.getElementById("cbt-date-prev");
+		var nextButton = document.getElementById("cbt-date-next");
+		var jump = document.getElementById("cbt-date-jump");
+		var dateNote = document.getElementById("cbt-date-note");
+
+		function utcDayMs(iso) {
+			var parts = String(iso).split("-").map(Number);
+			return Date.UTC(parts[0], parts[1] - 1, parts[2]);
+		}
+		function isoAt(offset) {
+			return new Date(TODAY_MS + offset * DAY_MS).toISOString().slice(0, 10);
+		}
+		function offsetOf(iso) {
+			return Math.round((utcDayMs(iso) - TODAY_MS) / DAY_MS);
+		}
+
+		function renderDates() {
+			dateBox.innerHTML = "";
+			var last = Math.min(windowStart + WINDOW_DAYS - 1, HORIZON);
+			for (var offset = windowStart; offset <= last; offset++) {
+				var day = new Date(TODAY_MS + offset * DAY_MS);
+				var button = document.createElement("button");
+				button.type = "button";
+				button.className = "cbt-date";
+				button.dataset.date = day.toISOString().slice(0, 10);
+				button.innerHTML =
+					day.toLocaleDateString("en-PH", { weekday: "short", timeZone: "UTC" }) +
+					"<strong>" + day.getUTCDate() + "</strong>";
+				button.addEventListener("click", function () {
+					// Read the chip off `this`. The loop's `button` is
+					// function-scoped (var), so every handler closes over the
+					// SAME binding — the last chip built. That painted chip 7 on
+					// every tap while state.date was correct, so the request
+					// looked right and only the highlight lied (reported from
+					// /book?c=ayala-courts&b=makati: "the black background
+					// always stays on 4").
+					selectDate(this.dataset.date);
+				});
+				dateBox.appendChild(button);
+			}
+			paintDates();
+			prevButton.disabled = windowStart <= 0;
+			nextButton.disabled = last >= HORIZON;
+		}
+
+		/* Pressed state is derived from state.date, never from node identity —
+		   identity ALSO left a ?d= link landing outside the visible week with
+		   no chip pressed at all. */
+		function paintDates() {
+			var pressed = null;
+			Array.prototype.forEach.call(dateBox.children, function (node) {
+				var isPressed = node.dataset.date === state.date;
+				node.setAttribute("aria-pressed", String(isPressed));
+				if (isPressed) pressed = node;
+			});
+			// B31: the strip scrolls inside its own box on a phone, and the
+			// pressed chip was the one scrolled out of view. Horizontal only —
+			// scrollIntoView could move the page.
+			if (pressed) {
+				dateBox.scrollLeft = Math.max(
+					0, pressed.offsetLeft - (dateBox.clientWidth - pressed.offsetWidth) / 2
+				);
+			}
+		}
+
+		function selectDate(iso) {
+			state.date = iso;
+			jump.value = iso;
+			paintDates();
+			// ⚠ B35: no clearSelection() here — the cart survives a date change.
+			load();
+		}
+
+		/* Page the window, keeping the last page full so the horizon date is
+		   always reachable (and any in-range date stays visible after a jump). */
+		function pageTo(offset) {
+			var lastStart = Math.max(HORIZON - WINDOW_DAYS + 1, 0);
+			windowStart = Math.max(0, Math.min(offset, lastStart));
+			renderDates();
+		}
+		function pageOnto(offset) {
+			pageTo(Math.floor(offset / WINDOW_DAYS) * WINDOW_DAYS);
+		}
+
+		function buildDates() {
+			var wanted = offsetOf(state.date);  // ?d= from a printed/saved link
+			var clamped = wanted >= 0 ? Math.min(wanted, HORIZON) : 0;
+			if (isFinite(wanted) && clamped !== wanted) {
+				// Don't silently swap the date they asked for: show the nearest
+				// one we can actually sell, and say so.
+				show(dateNote, wanted > HORIZON
+					? "{{ _('Online bookings are open up to') }} " + isoAt(HORIZON) + "."
+					: "{{ _('That date has passed — showing today instead.') }}");
+			}
+			state.date = isoAt(clamped);
+			jump.min = TODAY;
+			jump.max = isoAt(HORIZON);
+			jump.value = state.date;
+			pageOnto(clamped);
+		}
+
+		prevButton.addEventListener("click", function () {
+			pageTo(windowStart - WINDOW_DAYS);
+		});
+		nextButton.addEventListener("click", function () {
+			pageTo(windowStart + WINDOW_DAYS);
+		});
+		jump.addEventListener("change", function () {
+			var wanted = offsetOf(this.value);
+			if (!(wanted >= 0) || wanted > HORIZON) {
+				// min/max are not enforced on typed input in every browser.
+				show(dateNote, "{{ _('Pick a date between') }} " + TODAY +
+					" {{ _('and') }} " + isoAt(HORIZON) + ".");
+				this.value = state.date;
+				return;
+			}
+			dateNote.hidden = true;
+			pageOnto(wanted);
+			selectDate(isoAt(wanted));
+		});
+
+		/* ---- availability ------------------------------------------------ */
+		function load() {
+			gridBox.innerHTML = '<div class="cbt-skeleton"></div><div class="cbt-skeleton"></div>';
+			return cbtGet("court_booking_tech.slots.get_public_availability", {
+				branch: BRANCH, date: state.date,
+			}).then(function (data) {
+				state.data = data;
+				renderMatrix();
+			}).catch(function (err) {
+				gridBox.innerHTML = "";
+				show(errorBox, err.message);
+			});
+		}
+
+		/* ---- the time × court matrix (Backlog B33) -------------------------
+		   One row per grid slot, one column per court, and EVERY cell states
+		   its amount AND its status — the user's own words, "always show
+		   amount and status of that time slot". That supersedes section-14's
+		   density rule (a price only where it differed from the court's
+		   headline rate); the signal that rule protected survives as
+		   .cbt-slot-rate--up, so an hour that costs more still stands out.
+
+		   The rows line up by construction, not by client-side alignment:
+		   slots.get_slot_grid builds ONE grid per BRANCH and _availability
+		   reuses it for every court, which is what makes "follow the court's
+		   timeslot" true here for free.
+
+		   The cell keeps the chip's contract EXACTLY — button.cbt-slot with
+		   data-court / data-start / data-status / data-index, disabled and the
+		   status modifier class when it is not available — because that is what
+		   the E2E suite selects on. What leaves the cell is the time label: the
+		   row header owns it now, and repeating it in every cell would eat the
+		   width the price and the status word need. */
+		var HOLD_KEYS = {};  // holds whose lapse already triggered ONE refresh
+		var holdTimer = null;
+
+		function stopHolds() {
+			if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+		}
+
+		function stateWord(slot) {
+			if (slot.status === "available") return "{{ _('Available') }}";
+			if (slot.status === "blocked") return "{{ _('Blocked') }}";
+			if (slot.status === "past") return "{{ _('Past') }}";
+			// A Reserved hold is not a sale — it is an unpaid claim that frees
+			// itself. Printing "Booked" on both is what makes a customer stop
+			// watching a slot that is about to come back.
+			return slot.booking_status === "Reserved"
+				? "{{ _('Reserved') }}"
+				: "{{ _('Booked') }}";
+		}
+
+		function holdLeft(ms) {
+			var total = Math.max(Math.floor(ms / 1000), 0);
+			var seconds = ("0" + (total % 60)).slice(-2);
+			var minutes = Math.floor(total / 60);
+			if (minutes < 60) return minutes + ":" + seconds;
+			return Math.floor(minutes / 60) + ":" +
+				("0" + (minutes % 60)).slice(-2) + ":" + seconds;
+		}
+
+		/* ONE interval for the whole grid, cleared at the top of every render.
+		   cbtCountdown is deliberately not reused here: it runs one interval
+		   PER element (a re-render would leak every one of them) and prints
+		   "1h 2m 3s" and the word "expired", neither of which fits a cell. */
+		function startHolds() {
+			var nodes = gridBox.querySelectorAll(".cbt-slot-hold[data-expires]");
+			if (!nodes.length) return;
+			var skew = Date.now() -
+				new Date(String(state.data.server_now).replace(" ", "T")).getTime();
+
+			function tick() {
+				var live = false;
+				var refresh = false;
+				Array.prototype.forEach.call(nodes, function (node) {
+					var target = new Date(
+						String(node.dataset.expires).replace(" ", "T")
+					).getTime();
+					var remaining = target - (Date.now() - skew);
+					if (remaining > 0) {
+						node.textContent = "{{ _('free in') }} " + holdLeft(remaining);
+						live = true;
+						return;
+					}
+					node.textContent = "{{ _('hold lapsed') }}";
+					// A lapsed hold really has freed the slot — the server
+					// treats it as free before the sweep flips it — so refresh
+					// rather than leave a stale word on screen. ONCE per hold,
+					// keyed on the hold's own identity rather than on the
+					// render: a render-scoped guard re-arms on every refresh
+					// and loops forever. The margin keeps clock skew out of it.
+					if (remaining < -2000 && !HOLD_KEYS[node.dataset.key]) {
+						HOLD_KEYS[node.dataset.key] = true;
+						refresh = true;
+					}
+				});
+				if (!live) stopHolds();
+				if (refresh) load();
+			}
+
+			tick();
+			holdTimer = setInterval(tick, 1000);
+		}
+
+		function matrixCell(court, slot, index) {
+			var button = document.createElement("button");
+			button.type = "button";
+			button.className = "cbt-slot";
+			button.dataset.index = index;
+			button.dataset.start = slot.start_time;
+			button.dataset.status = slot.status;
+			button.dataset.court = court.court;
+
+			var price = document.createElement("span");
+			price.className = "cbt-slot-rate";
+			if (slot.rate != null && Number(slot.rate) !== Number(court.hourly_rate)) {
+				price.className += " cbt-slot-rate--up";
+			}
+			price.textContent = slot.rate == null ? "—" : moneyShort(slot.rate);
+			button.appendChild(price);
+
+			var word = document.createElement("small");
+			word.className = "cbt-slot-state";
+			word.textContent = stateWord(slot);
+			button.appendChild(word);
+
+			if (slot.status === "available") {
+				button.setAttribute("aria-pressed", "false");
+				button.addEventListener("click", function () {
+					toggleSlot(court, slot);
+				});
+			} else {
+				button.disabled = true;
+				button.className += " cbt-slot--" +
+					(slot.status === "booked" ? "booked" : slot.status);
+				if (slot.booking_status === "Reserved" && slot.hold_expires_at) {
+					var hold = document.createElement("small");
+					hold.className = "cbt-slot-hold";
+					hold.dataset.expires = slot.hold_expires_at;
+					hold.dataset.key = court.court + "|" + slot.start_time + "|" +
+						slot.hold_expires_at;
+					button.appendChild(hold);
+				}
+			}
+			return button;
+		}
+
+		function matrixHead(court) {
+			var cell = document.createElement("th");
+			cell.scope = "col";
+			cell.className = "cbt-colhead";
+			cell.dataset.court = court.court;
+			if (court.court_type) cell.title = court.court_type;  // sport on hover; the price is on every cell
+
+			var name = document.createElement("p");
+			name.className = "cbt-card-title cbt-colhead-name";
+			name.textContent = court.court_name;
+			cell.appendChild(name);
+
+			return cell;
+		}
+
+		function renderMatrix() {
+			errorBox.hidden = true;
+			stopHolds();
+			gridBox.innerHTML = "";
+			var courts = (state.data && state.data.courts) || [];
+			if (!courts.length) {
+				gridBox.innerHTML =
+					'<div class="cbt-empty">{{ _("This branch is closed on the selected day.") }}</div>';
+				return;
+			}
+
+			var wrap = document.createElement("div");
+			wrap.className = "cbt-matrix-wrap";
+			wrap.id = "cbt-matrix-wrap";
+			var table = document.createElement("table");
+			table.className = "cbt-matrix";
+
+			var headRow = document.createElement("tr");
+			var corner = document.createElement("th");
+			corner.scope = "col";
+			corner.className = "cbt-timecell cbt-matrix-corner";
+			corner.textContent = "{{ _('Time') }}";
+			headRow.appendChild(corner);
+			courts.forEach(function (court) {
+				headRow.appendChild(matrixHead(court));
+			});
+			var head = document.createElement("thead");
+			head.appendChild(headRow);
+			table.appendChild(head);
+
+			var body = document.createElement("tbody");
+			(courts[0].slots || []).forEach(function (row, index) {
+				var line = document.createElement("tr");
+				line.dataset.start = row.start_time;
+				line.dataset.end = row.end_time;
+				var when = document.createElement("th");
+				when.scope = "row";
+				when.className = "cbt-timecell";
+				// The RANGE, not the start (user ruling 2026-09-04): an hour on
+				// a grid is a span, and "6 AM" alone left the customer working
+				// out where it ended. One text node, dash included, so what the
+				// page shows is exactly what a test can read.
+				when.textContent = timeRange(row.start_time, row.end_time);
+				line.appendChild(when);
+				courts.forEach(function (court) {
+					var cell = document.createElement("td");
+					cell.className = "cbt-cell";
+					cell.dataset.court = court.court;
+					var slot = (court.slots || [])[index];
+					// Every column shares the branch grid, so this is never
+					// missing today. Rendering an empty cell rather than
+					// skipping one is what stops a future short column from
+					// shifting every slot below it into the wrong hour.
+					if (slot) cell.appendChild(matrixCell(court, slot, index));
+					line.appendChild(cell);
+				});
+				body.appendChild(line);
+			});
+			table.appendChild(body);
+			wrap.appendChild(table);
+			gridBox.appendChild(wrap);
+			var lost = pruneSoldPicks();
+			if (lost) {
+				show(errorBox, lost === 1
+					? "{{ _('One slot in your cart was just taken — it has been removed.') }}"
+					: lost + " {{ _('slots in your cart were just taken — they have been removed.') }}");
+				refreshQuote();
+			}
+			paintSelection();
+			startHolds();
+		}
+
+		/* ---- the cart ----------------------------------------------------- */
+		function toggleSlot(court, slot) {
+			togglePick(court.court, state.date, slot.start_time);
+			paintSelection();
+			refreshQuote();
+		}
+
+		function clearSelection() {
+			state.picked = {};
+			state.quote = null;
+			bar.hidden = true;
+			paintSelection();
+		}
+
+		function paintSelection() {
+			gridBox.querySelectorAll(".cbt-slot").forEach(function (button) {
+				if (button.disabled) return;
+				button.setAttribute("aria-pressed", String(
+					isPicked(button.dataset.court, state.date, button.dataset.start)
+				));
+			});
+		}
+
+		/* Drop picks sold while the cart sat. Current date only; reserve_cart
+		   catches the rest. */
+		function pruneSoldPicks() {
+			var dropped = 0;
+			((state.data && state.data.courts) || []).forEach(function (court) {
+				var key = pickKey(court.court, state.date);
+				var times = state.picked[key];
+				if (!times) return;
+				var live = times.filter(function (start) {
+					var slot = (court.slots || []).find(function (entry) {
+						return entry.start_time === start;
+					});
+					return slot && slot.status === "available";
+				});
+				dropped += times.length - live.length;
+				if (live.length) state.picked[key] = live; else delete state.picked[key];
+			});
+			return dropped;
+		}
+
+		/* Debounced — one tap is now N server-side quotes. */
+		function refreshQuote() {
+			if (quoteTimer) clearTimeout(quoteTimer);
+			if (!cartCount()) {
+				state.quote = null;
+				bar.hidden = true;
+				return;
+			}
+			quoteTimer = setTimeout(runQuote, 180);
+		}
+
+		function runQuote() {
+			var items = cartItems();
+			if (!items.length) { bar.hidden = true; return; }
+			// ⚠ cbtGet uses URLSearchParams.append — an array must be stringified.
+			return cbtGet("court_booking_tech.api.portal.get_cart_quote", {
+				items: JSON.stringify(items),
+			}).then(function (quote) {
+				state.quote = quote;
+				document.getElementById("cbt-selection-label").textContent =
+					quote.count === 1
+						? "1 {{ _('booking') }}"
+						: quote.count + " {{ _('bookings') }}";
+				// ⚠ Money only — the suite reads this as a single amount.
+				document.getElementById("cbt-selection-total").textContent =
+					money(quote.total_amount);
+				bar.hidden = false;
+			}).catch(function (err) {
+				show(errorBox, err.message);
+			});
+		}
+
+		/* ---- checkout ----------------------------------------------------- */
+		function openCheckout() {
+			if (!state.quote || !state.quote.count) return;
+			var quote = state.quote;
+
+			function line(left, right) {
+				return "<tr><td>" + left + "</td><td>" + right + "</td></tr>";
+			}
+
+			/* One block per booking — quote.items are the runs reserve_cart
+			   will insert. */
+			var html = "";
+			quote.items.forEach(function (item) {
+				html += '<tr class="cbt-line-head" data-testid="cart-item"><td colspan="2">' +
+					esc(item.court_name) + " &middot; " + esc(item.booking_date) +
+					" &middot; " + timeRange(item.start_time, item.end_time) +
+					"</td></tr>";
+
+				// Section-14: segments REPLACE the Rate row — hourly_rate is a blend.
+				var segments = item.segments || [];
+				if (segments.length > 1) {
+					segments.forEach(function (segment) {
+						var when = timeRange(segment.start_time, segment.end_time);
+						var note = segment.label ? " &middot; " + esc(segment.label) : "";
+						html += line(
+							'<span data-testid="rate-breakdown">' + when + note +
+								" &middot; " + money(segment.hourly_rate) +
+								"/{{ _('hr') }}</span>",
+							money(segment.amount)
+						);
+					});
+				} else {
+					html += line("{{ _('Rate') }}", money(item.hourly_rate) + "/{{ _('hr') }}");
+				}
+				// testid not id: the discount is per booking now.
+				if (item.discount_percent > 0) {
+					html += line("{{ _('Subtotal') }}", money(item.subtotal));
+					html += line(
+						'<span data-testid="member-discount">{{ _("Member discount") }} (' +
+							item.discount_percent + "%)</span>",
+						"-" + money(item.discount_amount)
+					);
+				}
+			});
+
+			if (quote.count > 1 || quote.booking_fee_count > 1) {
+				html += line(
+					'<span data-testid="cart-summary">{{ _("Bookings") }}</span>',
+					quote.count + (Number(quote.booking_fee_count)
+						? " &middot; " + quote.booking_fee_count + " {{ _('booking fee(s)') }}"
+						: "")
+				);
+			}
+
+			// ⚠ VAT once, on the summed court share — never per item (rounding).
+			if (quote.vat_mode === "VAT") {
+				html += line("{{ _('VATable sales') }}", money(quote.vatable_amount));
+				html += line(
+					"{{ _('VAT') }} (" + quote.vat_percent + "%)", money(quote.vat_amount)
+				);
+			} else {
+				html += line("{{ _('VAT') }}", "{{ _('NON-VAT') }}");
+			}
+			var fee = quote.items.reduce(function (sum, item) {
+				return sum + Number(item.platform_fee || 0);
+			}, 0);
+			// Backlog B49: a continued session pays ONE fee. The fee line shows
+			// what the bookings would have carried; the discount line, what the
+			// session saved — the server's figures, net = the fee actually charged.
+			var waived = Number(quote.continuous_discount || 0);
+			if (fee + waived > 0) {
+				html += line(
+					'<span data-testid="booking-fee">{{ _("Booking fee") }}</span>',
+					money(fee + waived)
+				);
+			}
+			if (waived > 0) {
+				html += line(
+					'<span data-testid="continuous-discount">{{ _("Continuous booking discount") }}</span>',
+					"-" + money(waived)
+				);
+			}
+			html += '<tr class="cbt-line-total"><td>{{ _("Total") }}</td><td>' +
+				money(quote.total_amount) + "</td></tr>";
+			// B39: store credit is a PAYMENT — it sits BELOW the total and never
+			// moves it. Ticking the box re-renders this block only.
+			var credit = Number(quote.credit_available || 0);
+			var creditRow = document.getElementById("cbt-credit-row");
+			creditRow.hidden = !(credit > 0);
+			if (credit > 0) {
+				document.getElementById("cbt-credit-amount").textContent = money(credit);
+				/* B46: the SERVER's plan, not min(balance, total). take_credit
+				   spends ONE credit document per BOOKING, so a cart with two
+				   ₱500 credits against three ₱200 rows settles ₱500, not the
+				   ₱600 this line used to promise — see credits.plan_spend. */
+				var spend = document.getElementById("cbt-use-credit").checked
+					? Number(quote.credit_spend || 0)
+					: 0;
+				html += line(
+					'<span data-testid="credit-applied">{{ _("Paid by store credit") }}</span>',
+					"-" + money(spend)
+				);
+				html += '<tr class="cbt-line-total"><td data-testid="credit-due">' +
+					'{{ _("Due now") }}</td><td>' +
+					money(Number(quote.total_amount) - spend) + "</td></tr>";
+			}
+			document.getElementById("cbt-quote-lines").innerHTML = html;
+
+			var box = document.getElementById("cbt-instructions-box");
+			document.getElementById("cbt-channels").innerHTML = CHANNELS.map(function (channel, index) {
+				return channelCard(channel, index, true);
+			}).join("");
+			cbt.bindQrTiles(document.getElementById("cbt-channels"));
+			// 2026-09-04 (user ruling): a channel that carries its OWN note is the
+			// instruction; the company-level text is the fallback for channels
+			// that carry none (Cash can never carry one).
+			var channelHasNote = CHANNELS.some(function (channel) { return channel.instructions; });
+			document.getElementById("cbt-instructions").textContent =
+				channelHasNote ? "" : (quote.payment_instructions || "");
+			box.hidden = !(CHANNELS.length || quote.payment_instructions);
+
+			document.getElementById("cbt-hold-note").textContent =
+				"{{ _('We hold this slot for') }} " + quote.reservation_expiry_minutes +
+				" {{ _('minutes. Upload your payment proof before then to keep it.') }}";
+
+			if (IS_GUEST) {
+				document.getElementById("cbt-login-cta").href =
+					"/login?redirect-to=" + encodeURIComponent(
+						window.location.pathname + window.location.search
+					);
+			}
+			var checkoutError = document.getElementById("cbt-checkout-error");
+			checkoutError.hidden = true;
+			if (!IS_GUEST) {
+				// No enabled transfer channel = the facility has switched online
+				// payment off (user ruling: the tenant decides its modes). Say so
+				// here, before a reserve the server would refuse anyway.
+				var reserveButton = document.getElementById("cbt-reserve");
+				reserveButton.disabled = !CHANNELS.length;
+				if (!CHANNELS.length) {
+					show(checkoutError,
+						"{{ _('This facility is not taking online payments right now — please contact the branch to book.') }}");
+				}
+			}
+			checkout.hidden = false;
+		}
+
+		function reserve() {
+			var button = document.getElementById("cbt-reserve");
+			button.disabled = true;
+			// A real array: cbtFetch JSON-stringifies the args object.
+			cbtFetch("court_booking_tech.api.portal.reserve_cart", {
+				items: cartItems(),
+				payment_channel: chosenChannel(),
+				apply_credit: document.getElementById("cbt-use-credit").checked ? 1 : 0,
+			}).then(function (result) {
+				checkout.hidden = true;
+				showConfirmed(result);
+			}).catch(function (err) {
+				show(document.getElementById("cbt-checkout-error"), err.message);
+				// reserve_cart is all-or-nothing; refresh the truth.
+				load();
+			}).finally(function () { button.disabled = false; });
+		}
+
+		function showConfirmed(result) {
+			var bookings = result.bookings || [];
+			var refs = bookings.map(function (row) { return row.booking; });
+			document.getElementById("cbt-confirmed-ref").textContent =
+				(refs.length === 1
+					? "{{ _('Booking reference') }}: "
+					: "{{ _('Booking references') }}: ") + refs.join(", ");
+
+			var lines = "<tr><td>{{ _('Facility') }}</td><td>" +
+				esc(result.company_name) + " &middot; " + esc(result.branch_name) +
+				"</td></tr>";
+			bookings.forEach(function (row) {
+				lines += "<tr><td>" + esc(row.court_name) + "</td><td>" +
+					esc(row.booking_date) + " " +
+					timeRange(row.start_time, row.end_time) + "</td></tr>";
+			});
+			lines += '<tr class="cbt-line-total"><td>{{ _("Amount due") }}</td><td>' +
+				money(result.total_amount) + "</td></tr>";
+			document.getElementById("cbt-confirmed-lines").innerHTML = lines;
+
+			var box = document.getElementById("cbt-confirmed-instructions-box");
+			var chosen = result.payment_channel_detail;
+			document.getElementById("cbt-confirmed-channel").innerHTML =
+				chosen ? channelCard(chosen, 0, false) : "";
+			cbt.bindQrTiles(document.getElementById("cbt-confirmed-channel"));
+			document.getElementById("cbt-confirmed-instructions").textContent =
+				chosen && chosen.instructions ? "" : (result.payment_instructions || "");
+			box.hidden = !(chosen || result.payment_instructions);
+
+			document.getElementById("cbt-upload-cta").href =
+				bookings.length === 1 ? bookings[0].detail_url : result.detail_url;
+			if (stopCountdown) stopCountdown();
+			stopCountdown = cbtCountdown(
+				document.getElementById("cbt-confirmed-countdown"),
+				result.reservation_expires_at, result.server_now
+			);
+			confirmed.hidden = false;
+			clearSelection();
+			load();
+		}
+
+		/* ---- floor-plan sketch (section-22) -------------------------------
+		   The sketch is server-rendered (it describes the branch, not the day),
+		   so all it needs from here is the bridge to the grid: tapping a court
+		   on the plan takes you to that court's card. The highlight PERSISTS
+		   until another court is tapped rather than fading on a timer — a
+		   1.5-second flash is unassertable in E2E and, more to the point, the
+		   customer has just told us which court they care about. */
+		var sketch = document.getElementById("cbt-sketch");
+
+		function pressSketch(court) {
+			Array.prototype.forEach.call(
+				sketch.querySelectorAll(".cbt-sketch-court"),
+				function (node) {
+					node.setAttribute("aria-pressed", String(node.dataset.court === court));
+				}
+			);
+		}
+
+		/* B33: a court is a COLUMN, so the sketch tap highlights the whole
+		   column and brings it into the wrapper's own horizontal scroll.
+		   `inline: "nearest"` on a header already in view does nothing, and
+		   `block: "nearest"` keeps a sideways move from yanking the page up or
+		   down. No header means the grid is still loading, or the branch is
+		   closed that day and says so below — acknowledging a tap that went
+		   nowhere would be the lie. */
+		function focusCourt(court) {
+			var heads = gridBox.querySelectorAll("th.cbt-colhead[data-court]");
+			var target = null;
+			Array.prototype.forEach.call(heads, function (head) {
+				if (head.dataset.court === court) target = head;
+			});
+			if (!target) return;
+			Array.prototype.forEach.call(
+				gridBox.querySelectorAll("th.cbt-colhead, td.cbt-cell"),
+				function (node) {
+					node.classList.toggle("cbt-col--focus", node.dataset.court === court);
+				}
+			);
+			pressSketch(court);
+			target.scrollIntoView({
+				behavior: "smooth", block: "nearest", inline: "nearest",
+			});
+		}
+
+		if (sketch) {
+			sketch.addEventListener("click", function (event) {
+				var node = event.target.closest(".cbt-sketch-court");
+				if (node) focusCourt(node.dataset.court);
+			});
+		}
+
+		/* ---- where to find us (Backlog B37) -------------------------------
+		   The map iframe stays empty until the customer opens the disclosure;
+		   `toggle` fires after the open attribute flips, for a tap and a key. */
+		var whereDetails = document.getElementById("cbt-where-details");
+		if (whereDetails) {
+			whereDetails.addEventListener("toggle", function () {
+				var frame = document.getElementById("cbt-where-map");
+				if (whereDetails.open && frame && !frame.getAttribute("src")) {
+					frame.setAttribute("src", frame.getAttribute("data-src"));
+				}
+			});
+		}
+
+		// B39: ticking the box repaints the money block; openCheckout is
+		// idempotent and reads the same cached quote.
+		document.getElementById("cbt-use-credit")
+			.addEventListener("change", openCheckout);
+
+		document.getElementById("cbt-review").addEventListener("click", openCheckout);
+		document.getElementById("cbt-clear").addEventListener("click", clearSelection);
+		document.getElementById("cbt-checkout-close").addEventListener("click", function () {
+			checkout.hidden = true;
+		});
+		checkout.addEventListener("click", function (event) {
+			if (event.target === checkout) checkout.hidden = true;
+		});
+		if (!IS_GUEST) {
+			document.getElementById("cbt-reserve").addEventListener("click", reserve);
+		}
+
+		buildDates();
+		load();
+	})();
+</script>
+{% endif %}
+{% endblock %}

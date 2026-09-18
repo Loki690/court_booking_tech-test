@@ -1,0 +1,11 @@
+{# App version, readable off any portal page when reporting a problem. The
+   data attribute carries the full asset stamp, so a screenshot of stale CSS is
+   self-diagnosing (2026-09-04). #}
+{# Shared foot: every portal page carries these from one edit. #}
+<p class="cbt-legal-links cbt-small cbt-muted" data-testid="legal-links">
+	<a href="/privacy-policy" data-testid="link-privacy">{{ _("Privacy Policy") }}</a>
+	<span aria-hidden="true">&middot;</span>
+	<a href="/terms-of-service" data-testid="link-terms">{{ _("Terms of Service") }}</a>
+</p>
+<p class="cbt-version cbt-small cbt-muted" data-testid="app-version"
+	data-asset-version="{{ cbt_asset_version() }}">v{{ cbt_app_version() }}</p>

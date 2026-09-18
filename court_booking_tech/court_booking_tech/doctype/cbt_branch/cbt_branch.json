@@ -1,0 +1,311 @@
+{
+ "actions": [],
+ "autoname": "format:{company_code}-{slug}",
+ "creation": "2026-07-22 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "identity_section",
+  "company",
+  "branch_name",
+  "is_active",
+  "identity_column",
+  "slug",
+  "company_code",
+  "phone",
+  "location_section",
+  "address_text",
+  "location_column",
+  "latitude",
+  "longitude",
+  "map_section",
+  "pin_map_html",
+  "embed_preview_html",
+  "hours_section",
+  "business_hours",
+  "booking_section",
+  "slot_duration_minutes",
+  "booking_column",
+  "buffer_minutes",
+  "floor_section",
+  "layout_rows",
+  "floor_column",
+  "layout_columns",
+  "layout",
+  "courts_tab",
+  "courts_html",
+  "media_tab",
+  "media_html",
+  "photos"
+ ],
+ "fields": [
+  {
+   "fieldname": "identity_section",
+   "fieldtype": "Section Break",
+   "label": "Identity"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Branch Name",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "identity_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "URL key used in printed deep links (?b=<slug>). Fixed after creation.",
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "label": "Slug",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "company.company_code",
+   "fieldname": "company_code",
+   "fieldtype": "Data",
+   "label": "Company Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location"
+  },
+  {
+   "fieldname": "address_text",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "location_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Set by the map pin below, or type it in.",
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "7"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "7"
+  },
+  {
+   "description": "Customers see branches ordered nearest-first from this pin.",
+   "fieldname": "map_section",
+   "fieldtype": "Section Break",
+   "label": "Pin on Map"
+  },
+  {
+   "fieldname": "pin_map_html",
+   "fieldtype": "HTML",
+   "label": "Pin Map"
+  },
+  {
+   "fieldname": "embed_preview_html",
+   "fieldtype": "HTML",
+   "label": "Map Preview"
+  },
+  {
+   "description": "COURT operating hours per day (bookable window). Same-day only — overnight rows are not supported.",
+   "fieldname": "hours_section",
+   "fieldtype": "Section Break",
+   "label": "Court Hours"
+  },
+  {
+   "fieldname": "business_hours",
+   "fieldtype": "Table",
+   "label": "Court Hours",
+   "options": "CBT Business Hours"
+  },
+  {
+   "fieldname": "booking_section",
+   "fieldtype": "Section Break",
+   "label": "Booking Configuration"
+  },
+  {
+   "default": "0",
+   "description": "Slot length for this branch. 0 = platform default.",
+   "fieldname": "slot_duration_minutes",
+   "fieldtype": "Int",
+   "label": "Slot Duration (Minutes)"
+  },
+  {
+   "fieldname": "booking_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Gap between consecutive slots (cleaning/turnover).",
+   "fieldname": "buffer_minutes",
+   "fieldtype": "Int",
+   "label": "Buffer (Minutes)"
+  },
+  {
+   "description": "Grid used by the Court Board floor plan. Cells without a court are gaps.",
+   "fieldname": "floor_section",
+   "fieldtype": "Section Break",
+   "label": "Floor Plan"
+  },
+  {
+   "default": "2",
+   "fieldname": "layout_rows",
+   "fieldtype": "Int",
+   "label": "Layout Rows"
+  },
+  {
+   "fieldname": "floor_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "3",
+   "fieldname": "layout_columns",
+   "fieldtype": "Int",
+   "label": "Layout Columns"
+  },
+  {
+   "fieldname": "layout",
+   "fieldtype": "Table",
+   "label": "Layout Cells",
+   "options": "CBT Branch Court Cell"
+  },
+  {
+   "fieldname": "courts_tab",
+   "fieldtype": "Tab Break",
+   "label": "Courts"
+  },
+  {
+   "description": "This branch's courts — read and edit them here without leaving the branch. Each court's own form still exists; Open takes you there.",
+   "fieldname": "courts_html",
+   "fieldtype": "HTML",
+   "label": "Courts"
+  },
+  {
+   "fieldname": "media_tab",
+   "fieldtype": "Tab Break",
+   "label": "Media"
+  },
+  {
+   "fieldname": "media_html",
+   "fieldtype": "HTML",
+   "label": "Photos"
+  },
+  {
+   "fieldname": "photos",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Photos",
+   "options": "CBT Media Item"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Facilities",
+   "link_doctype": "CBT Court",
+   "link_fieldname": "branch"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Court Booking",
+   "link_fieldname": "branch"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Slot Block",
+   "link_fieldname": "branch"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Booking Invoice",
+   "link_fieldname": "branch"
+  },
+  {
+   "group": "Open Play",
+   "link_doctype": "CBT Open Play Session",
+   "link_fieldname": "branch"
+  }
+ ],
+ "make_attachments_public": 1,
+ "modified": "2026-09-11 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Branch",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "branch_name,company",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "branch_name"
+}

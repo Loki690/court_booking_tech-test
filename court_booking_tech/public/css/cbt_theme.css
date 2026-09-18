@@ -1,0 +1,147 @@
+/* Court Booking Tech — design tokens (section-23, Backlog B14: "FaceLift").
+ *
+ * THE PLACE THIS APP TAKES A COLOUR FROM. A new status gets a token here, not
+ * a hex at the call site. Three surfaces consume these: the portal
+ * (cbt_portal.css + the two self-contained pages), the Court Board and the
+ * Open Play Board (their CBT_*_STYLES template literals).
+ *
+ * TWO DOCUMENTED EXCEPTIONS, so the claim above stays true rather than
+ * aspirational:
+ *   1. The Open Play Board's TV MODE carries its own fixed dark palette
+ *      (#0b0f14 ground, #7ee787 counts, …). It is tuned for a wall screen at
+ *      distance, it is not theme-switchable, and section-23 deliberately did
+ *      not touch it — it is the one surface with a pixel-occlusion test.
+ *   2. Two decorative GRADIENTS — the floor-plan gap hatching and the loading
+ *      skeleton shimmer — carry inline rgba() stops. A gradient stop is not a
+ *      status and tokenising it would buy nothing.
+ *
+ * LOADED TWICE, DELIBERATELY:
+ *
+ *   1. hooks.app_include_css -> every DESK page of the site. That is a DESK
+ *      hook (www/desk.py -> desk.html), NOT app-wide — section-21 as-built 7.
+ *   2. templates/includes/cbt_portal_head.html, BEFORE cbt_portal.css -> the
+ *      portal pages that carry the shared head, plus an explicit <link> on
+ *      signup.html and my-profile.html, which do not.
+ *
+ * BECAUSE OF (1) THIS FILE DECLARES CUSTOM PROPERTIES AND NOTHING ELSE.
+ * No element selectors, no frappe-variable overrides, not one component rule —
+ * it shares a document with every other app installed on the site, and with
+ * this app's own desk FORMS, which are explicitly out of the facelift's scope
+ * (`.cbt-branch-map` lives on the CBT Branch form and is asserted by
+ * e2e/tests/test_branch_form_geo.py). Never add a `[class^="cbt-"]`-style
+ * catch-all here: it would reach that map.
+ *
+ * Every property is `--cbt-`-prefixed, so nothing here can shadow a frappe or
+ * third-app variable even by accident.
+ *
+ * DARK MODE: frappe's theme switcher writes the RESOLVED theme to
+ * `document.documentElement[data-theme]` (theme_switcher.js:162 — note
+ * `data-theme-mode` on :129 is the user's *setting*, which can be "automatic").
+ * The dark block below re-points the same names, so a consumer writing
+ * `var(--cbt-primary)` is dark-correct without knowing dark mode exists.
+ * The portal is the website layer and carries no data-theme, so it always
+ * reads the light set.
+ *
+ * CONTRAST: every text/background pair used in the app clears WCAG AA (4.5:1).
+ * Computed from the sRGB relative luminances, not eyeballed —
+ *   --cbt-primary     on white              5.18:1
+ *   white             on --cbt-primary      5.18:1
+ *   --cbt-primary-600 on white              7.99:1
+ *   --cbt-ink-muted   on white              5.30:1
+ *   --cbt-ink-muted   on --cbt-surface      5.07:1
+ *   --cbt-accent-ink  on --cbt-accent-soft  5.29:1
+ * --cbt-accent (amber) is 2.03:1 on white and therefore NEVER carries text:
+ * it is a fill, a rule or a dot. Text on an amber surface uses
+ * --cbt-accent-ink, and text ON amber itself uses --cbt-accent-contrast.
+ * This is the one rule in the file that is easy to break.
+ */
+
+:root {
+	/* ---- brand ---------------------------------------------------------- */
+	--cbt-primary: #0e7c5b;        /* court green */
+	--cbt-primary-600: #0a5c44;    /* hover / active (LIGHTER in dark, on purpose) */
+	--cbt-primary-soft: #e6f4ef;   /* tinted surfaces, selected chips, card heads */
+	--cbt-primary-line: #bfdfd1;   /* borders that sit on a tinted surface */
+	--cbt-accent: #f5a623;         /* amber — fills and rules only, never text */
+	--cbt-accent-soft: #fdf1da;
+	--cbt-accent-ink: #8a5a08;     /* the readable amber, for text */
+	--cbt-accent-contrast: #3d2800; /* text ON --cbt-accent — 6.9:1, both themes */
+
+	/* ---- surfaces + ink -------------------------------------------------- */
+	--cbt-surface: #fafaf7;        /* warm off-white page background */
+	--cbt-card: #ffffff;
+	--cbt-ink: #1f2a26;            /* green-tinted near-black */
+	--cbt-ink-muted: #5f6f68;
+	--cbt-line: #e3e8e5;
+
+	/* ---- status families -------------------------------------------------
+	   RE-TINTED, NEVER RE-MEANT. reserved=amber, confirmed=green,
+	   extended=blue, blocked/no-show=red, past/dead=grey, moved=indigo — the
+	   same semantics sections 4-19 shipped. The values are the ones those
+	   sections chose; naming them is the change, so the badge a customer
+	   already knows does not shift under them.
+
+	   These are the PORTAL's status colours. The two desk boards deliberately
+	   keep frappe's own bg / text-on colour PAIRS for their slot chips: those
+	   pairs are contrast-guaranteed in both themes by the framework, and
+	   hand-rolling them here would owe a dark counterpart per chip for no
+	   visible gain (section-23 as-built).
+
+	   DO NOT WRITE A CSS GLOB IN A COMMENT IN THIS FILE. The previous wording
+	   was "--bg-<star>/--text-on-<star>", and the slash-star-slash sequence in
+	   the middle of it CLOSED THIS COMMENT EARLY: everything after it parsed as
+	   a declaration, the error recovery ran to the next semicolon, and it ate
+	   --cbt-reserved-bg. A booked slot then rendered with no background at all
+	   — indistinguishable from an available one — and nothing warned, because
+	   this file is served raw through the assets symlink and never touches
+	   esbuild. Same silent class as a backtick inside the boards' style
+	   literals. test_19_facelift_smoke.py now asserts every token below
+	   actually resolves in a browser, which is the only check that catches it. */
+	--cbt-reserved-bg: #fff6e0;   --cbt-reserved-ink: #94600a;
+	--cbt-confirmed-bg: #eaf9ee;  --cbt-confirmed-ink: #1b7a34;
+	--cbt-extended-bg: #eaf2ff;   --cbt-extended-ink: #1a5fb4;
+	--cbt-blocked-bg: #fdecea;    --cbt-blocked-ink: #b52a1d;
+	--cbt-blocked-line: #ffc9c2;
+	--cbt-noshow-bg: #fdece9;     --cbt-noshow-ink: #a2382a;
+	--cbt-past-bg: #f1f3f2;       --cbt-past-ink: #7b857f;
+	--cbt-completed-ink: #4b5560; --cbt-dead-ink: #8a939c;
+	--cbt-moved-bg: #eef0fb;      --cbt-moved-ink: #4a5578;
+	--cbt-moved-line: #d8ddf2;
+
+	/* ---- geometry -------------------------------------------------------- */
+	--cbt-radius: 12px;
+	--cbt-radius-sm: 8px;
+	--cbt-radius-pill: 999px;
+	--cbt-shadow: 0 1px 3px rgba(15, 40, 30, .08);
+	--cbt-shadow-lift: 0 4px 16px rgba(15, 40, 30, .13);
+	/* The checkout bar sits ABOVE its content, so its shadow points up. */
+	--cbt-shadow-bar: 0 -2px 14px rgba(15, 40, 30, .1);
+	--cbt-focus-ring: 0 0 0 3px rgba(14, 124, 91, .22);
+}
+
+/* Desk dark theme. Green lightens (a 5.2:1-on-white green is 3.6:1 on a
+   near-black page); the "600" step lightens FURTHER because on a dark surface
+   the hover state has to come toward the viewer, not away from them. The
+   tinted-surface tokens invert from a pale wash to a deep one. */
+[data-theme="dark"] {
+	--cbt-primary: #3fbf90;        /* 7.9:1 on frappe's --gray-900 page */
+	--cbt-primary-600: #5fd3a8;
+	--cbt-primary-soft: #14332a;
+	--cbt-primary-line: #24594a;
+	--cbt-accent: #f7b750;
+	--cbt-accent-soft: #3a2d13;
+	--cbt-accent-ink: #f2c37a;
+	/* Amber stays light in both themes, so the ink ON it does not flip. */
+	--cbt-accent-contrast: #3d2800;
+
+	--cbt-surface: #171717;
+	--cbt-card: #1c1c1c;
+	--cbt-ink: #ececec;
+	--cbt-ink-muted: #a3a3a3;
+	--cbt-line: #2f2f2f;
+
+	--cbt-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+	--cbt-shadow-lift: 0 4px 16px rgba(0, 0, 0, .55);
+	--cbt-shadow-bar: 0 -2px 14px rgba(0, 0, 0, .5);
+	--cbt-focus-ring: 0 0 0 3px rgba(63, 191, 144, .28);
+}

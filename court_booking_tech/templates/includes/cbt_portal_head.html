@@ -1,0 +1,79 @@
+{# Shared portal assets + top bar (section-9). Included by every CBT portal
+   page so the nav, stylesheet and fetch helper can never drift apart. #}
+{# cbt_theme.css MUST come first: it declares the --cbt-* custom properties
+   that every rule in cbt_portal.css below now reads. (Order is belt-and-braces
+   — custom properties resolve at use time, not at declaration time — but a
+   reader should not have to know that to see which file owns the colours.) #}
+{# ?v=<version>-<hash> (assets_version.py): a bare path let a returning phone
+   style new markup with a cached, older stylesheet. #}
+<link rel="stylesheet" href="{{ cbt_asset_url('/assets/court_booking_tech/css/cbt_theme.css') }}">
+<link rel="stylesheet" href="{{ cbt_asset_url('/assets/court_booking_tech/css/cbt_portal.css') }}">
+{# Backlog B45: the app's ONE client-side time language, the SAME file the desk
+   loads through hooks.app_include_js. Before it, the PH convention (6 AM,
+   6:30 AM, 12 MN, 12 NN) lived in this page's own <script> and every desk
+   surface printed 06:00 instead — and the /my-bookings fork had lost its
+   `% 24`, so a midnight-ending booking read "12:00 PM". #}
+<script src="{{ cbt_asset_url('/assets/court_booking_tech/js/cbt_time_format.js') }}"></script>
+<script src="{{ cbt_asset_url('/assets/court_booking_tech/js/cbt_portal.js') }}"></script>
+
+{# The wordmark must MATCH the Google OAuth consent screen's App name exactly —
+   Google compares them and refuses validation on a mismatch. #}
+<div class="cbt-topbar">
+	<div class="cbt-titlegroup">
+		<a class="cbt-brand" href="/find-court" data-testid="brand">BookPickleBall</a>
+		<h1>{{ page_heading or _("Find a court") }}</h1>
+	</div>
+	<div class="cbt-navlinks">
+		<a class="cbt-navlink" href="/find-court">{{ _("Find a court") }}</a>
+		{% if is_guest %}
+			<a class="cbt-navlink" href="/login">{{ _("Log in") }}</a>
+			<a class="cbt-navlink cbt-navlink--primary" href="/signup">{{ _("Sign up") }}</a>
+		{% else %}
+			<a class="cbt-navlink" href="/my-bookings">{{ _("My bookings") }}</a>
+			<a class="cbt-navlink" href="/my-profile">{{ _("My profile") }}</a>
+			{# B31: frappe's website navbar (and its logout menu) is suppressed on
+			   the portal pages, so the way OUT lives here. A POST through
+			   cbtFetch — frappe's logout is POST-only and CSRF-checked. #}
+			<button type="button" class="cbt-navlink" id="cbt-logout">{{ _("Log out") }}</button>
+		{% endif %}
+	</div>
+</div>
+{# The facility gallery, shared by the marketplace card and the booking hero so
+   the two banners can never open different things. Empty until somebody taps a
+   picture — nothing here is fetched on page load. #}
+<div class="cbt-photo-viewer" id="cbt-photo-viewer" hidden
+	data-label-counter="{{ _('Photo {0} of {1}') }}">
+	<div role="dialog" aria-modal="true" aria-label="{{ _('Facility photos') }}"
+		style="display:flex;flex-direction:column;height:100%">
+		<div class="cbt-gallery-top">
+			<span id="cbt-photo-viewer-title" data-testid="viewer-title"></span>
+			<button type="button" class="cbt-gallery-nav" id="cbt-photo-viewer-close"
+				data-testid="viewer-close" aria-label="{{ _('Close') }}">&times;</button>
+		</div>
+		<div class="cbt-gallery-stage">
+			<button type="button" class="cbt-gallery-nav" id="cbt-photo-viewer-prev"
+				data-testid="viewer-prev" aria-label="{{ _('Previous photo') }}">&#8249;</button>
+			<img id="cbt-photo-viewer-image" data-testid="viewer-image" alt="">
+			<button type="button" class="cbt-gallery-nav" id="cbt-photo-viewer-next"
+				data-testid="viewer-next" aria-label="{{ _('Next photo') }}">&#8250;</button>
+		</div>
+		<p class="cbt-gallery-caption" id="cbt-photo-viewer-caption"
+			data-testid="viewer-caption"></p>
+		<div class="cbt-gallery-strip" id="cbt-photo-viewer-strip"></div>
+	</div>
+</div>
+
+{% if not is_guest %}
+<script>
+	(function () {
+		var button = document.getElementById("cbt-logout");
+		if (!button) return;
+		button.addEventListener("click", function () {
+			button.disabled = true;
+			cbtFetch("logout", {})
+				.then(function () { window.location.href = "/find-court"; })
+				.catch(function () { button.disabled = false; });
+		});
+	})();
+</script>
+{% endif %}

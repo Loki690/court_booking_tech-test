@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "creation": "2026-08-27 16:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "period_section",
+  "year",
+  "month",
+  "period",
+  "period_column",
+  "closed_at",
+  "closed_by",
+  "rows_section",
+  "rows",
+  "totals_section",
+  "total_confirmed_revenue",
+  "totals_column",
+  "total_amount_due"
+ ],
+ "fields": [
+  {
+   "description": "Pick a month that has ENDED and save. The figures every tenant would see on CBT Platform Revenue for that month are copied here and frozen; the report then reads this record instead of recomputing. Delete this record to reopen the month.",
+   "fieldname": "period_section",
+   "fieldtype": "Section Break",
+   "label": "Month"
+  },
+  {
+   "fieldname": "year",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Year",
+   "reqd": 1
+  },
+  {
+   "description": "1 = January … 12 = December",
+   "fieldname": "month",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Month",
+   "reqd": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "period",
+   "fieldtype": "Data",
+   "label": "Period",
+   "read_only": 1
+  },
+  {
+   "fieldname": "period_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "closed_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Closed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "closed_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Closed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rows_section",
+   "fieldtype": "Section Break",
+   "label": "Frozen figures, per tenant"
+  },
+  {
+   "fieldname": "rows",
+   "fieldtype": "Table",
+   "label": "Rows",
+   "options": "CBT Platform Month Close Row",
+   "read_only": 1
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_confirmed_revenue",
+   "fieldtype": "Currency",
+   "label": "Confirmed Revenue (all tenants)",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "totals_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_amount_due",
+   "fieldtype": "Currency",
+   "label": "Amount Due (all tenants)",
+   "options": "PHP",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-27 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Platform Month Close",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "period,closed_by",
+ "sort_field": "period",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "period",
+ "track_changes": 1
+}

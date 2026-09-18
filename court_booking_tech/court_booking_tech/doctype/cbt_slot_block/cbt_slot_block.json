@@ -1,0 +1,159 @@
+{
+ "actions": [],
+ "creation": "2026-07-22 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "block_section",
+  "branch",
+  "company",
+  "court",
+  "block_column",
+  "block_date",
+  "start_time",
+  "end_time",
+  "reason_section",
+  "reason",
+  "open_play_session",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "block_section",
+   "fieldtype": "Section Break",
+   "label": "Block"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "options": "CBT Branch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1
+  },
+  {
+   "description": "Leave empty to close the WHOLE branch (e.g. holidays).",
+   "fieldname": "court",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Court",
+   "options": "CBT Court"
+  },
+  {
+   "fieldname": "block_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "block_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "label": "Start Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "End Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason_section",
+   "fieldtype": "Section Break",
+   "label": "Reason"
+  },
+  {
+   "default": "Maintenance",
+   "fieldname": "reason",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Reason",
+   "options": "Maintenance\nEvent\nOpen Play\nHoliday\nOther",
+   "reqd": 1
+  },
+  {
+   "description": "Set when an open play session dedicated this court. Cancelling that session removes exactly these blocks — matching on the notes text would also delete a staff-made \"Open Play\" block.",
+   "fieldname": "open_play_session",
+   "fieldtype": "Link",
+   "label": "Open Play Session",
+   "options": "CBT Open Play Session",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-22 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Slot Block",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff",
+   "write": 1
+  }
+ ],
+ "search_fields": "branch,block_date,reason",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

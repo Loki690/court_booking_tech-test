@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "creation": "2026-07-22 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "row_index",
+  "col_index",
+  "court"
+ ],
+ "fields": [
+  {
+   "description": "1-based row position on the floor plan.",
+   "fieldname": "row_index",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Row",
+   "reqd": 1
+  },
+  {
+   "description": "1-based column position on the floor plan.",
+   "fieldname": "col_index",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Column",
+   "reqd": 1
+  },
+  {
+   "description": "Leave empty for a floor-plan gap (walkway, lounge).",
+   "fieldname": "court",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Court",
+   "options": "CBT Court"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-22 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Branch Court Cell",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

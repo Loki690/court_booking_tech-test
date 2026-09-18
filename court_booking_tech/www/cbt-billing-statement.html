@@ -1,0 +1,53 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ invoice_name }}{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block page_content %}
+<div class="cbt-wrap">
+	<div class="cbt-no-print">
+		{% include "court_booking_tech/templates/includes/cbt_portal_head.html" %}
+		<div class="cbt-actions" style="margin-bottom:1rem">
+			<button type="button" class="btn btn-primary" id="cbt-print">{{ _("Print") }}</button>
+			<a class="btn btn-default"
+				href="/api/method/court_booking_tech.api.portal.download_invoice_pdf?booking={{ booking_name | urlencode }}">
+				{{ _("Download PDF") }}
+			</a>
+			<a class="btn btn-default" href="/my-bookings/{{ booking_name | urlencode }}">
+				{{ _("Back to booking") }}
+			</a>
+		</div>
+	</div>
+
+	{# The SHIPPED print format's own markup + style — never a re-implementation
+	   (S6 as-built 4: the format is a one-line include of the live template). #}
+	<style>{{ statement_style | safe }}</style>
+	<div class="cbt-statement">{{ statement_body | safe }}</div>
+	<div class="cbt-no-print">
+		{% include "court_booking_tech/templates/includes/cbt_portal_foot.html" %}
+	</div>
+</div>
+
+<style>
+	/* Section-23: the statement itself stays PAPER — white ground, black ink,
+	   no theme. It is the legal-ish artifact section-6 specified and the print
+	   format renders the same markup; only the frame around it is themed. */
+	.cbt-statement {
+		background: #fff; color: #000; padding: 1.25rem;
+		border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius);
+		box-shadow: var(--cbt-shadow);
+		overflow-x: auto;
+	}
+	@media print {
+		.cbt-no-print, .web-footer, .navbar, footer { display: none !important; }
+		.cbt-statement { border: 0; padding: 0; }
+		.cbt-wrap { max-width: none; padding: 0; }
+	}
+</style>
+
+<script>
+	document.getElementById("cbt-print").addEventListener("click", function () {
+		window.print();
+	});
+</script>
+{% endblock %}

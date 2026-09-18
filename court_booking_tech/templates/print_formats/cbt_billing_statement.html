@@ -1,0 +1,229 @@
+{#- CBT Billing Statement (section-6, PLAN §6) — included by the
+    "CBT Billing Statement" Print Format record (module JSON); edits here are
+    live at render time. Company identity renders LIVE (legal-name fixes
+    propagate); VAT figures + the title render from the invoice's
+    creation-time SNAPSHOT fields. Layout is table-based and the watermark is
+    absolute-positioned (no flex, no position:fixed) so wkhtmltopdf renders it
+    faithfully. -#}
+{%- set company = frappe.get_doc("CBT Company", doc.company) -%}
+{%- set branch = frappe.db.get_value("CBT Branch", doc.branch, ["branch_name", "address_text"], as_dict=True) if doc.branch else None -%}
+{%- set paid = doc.status == "Paid & Verified" -%}
+{%- set cancelled = doc.status == "Cancelled" -%}
+{%- set vat_pct = frappe.utils.flt(doc.vat_percent) -%}
+<style>
+	.cbt-bs { position: relative; color: #1f2937; font-size: 13px; line-height: 1.45; }
+	.cbt-bs table { width: 100%; border-collapse: collapse; }
+	.cbt-bs-watermark {
+		position: absolute; top: 38%; left: 4%; z-index: 0;
+		font-size: 92px; font-weight: 800; letter-spacing: 10px;
+		color: #dc2626; opacity: 0.14;
+		-webkit-transform: rotate(-24deg); transform: rotate(-24deg);
+		white-space: nowrap;
+	}
+	.cbt-bs-content { position: relative; z-index: 1; }
+	.cbt-bs-header td { vertical-align: top; padding-bottom: 10px; }
+	.cbt-bs-logo { max-height: 70px; max-width: 160px; }
+	.cbt-bs-company { font-size: 17px; font-weight: 700; }
+	.cbt-bs-muted { color: #6b7280; font-size: 12px; }
+	.cbt-bs-title {
+		text-align: center; font-size: 22px; font-weight: 800;
+		letter-spacing: 3px; padding: 8px 0 2px 0;
+	}
+	.cbt-bs-meta { margin: 10px 0 14px 0; }
+	.cbt-bs-meta td { padding: 2px 0; }
+	.cbt-bs-items th {
+		text-align: left; border-top: 2px solid #1f2937;
+		border-bottom: 1px solid #1f2937; padding: 6px 4px; font-size: 12px;
+	}
+	.cbt-bs-items td { border-bottom: 1px solid #e5e7eb; padding: 6px 4px; }
+	.cbt-bs-num { text-align: right; white-space: nowrap; }
+	.cbt-bs-totals { margin-top: 8px; }
+	.cbt-bs-totals td { padding: 3px 4px; }
+	.cbt-bs-total-row td {
+		border-top: 2px solid #1f2937; font-weight: 800; font-size: 15px;
+	}
+	.cbt-bs-nonvat { font-weight: 700; letter-spacing: 2px; color: #374151; }
+	.cbt-bs-stamp {
+		display: inline-block; border: 3px solid #15803d; color: #15803d;
+		font-weight: 800; font-size: 18px; letter-spacing: 3px;
+		padding: 6px 14px; -webkit-transform: rotate(-3deg); transform: rotate(-3deg);
+	}
+	.cbt-bs-or { margin-top: 18px; font-size: 13px; }
+	.cbt-bs-footer {
+		margin-top: 22px; padding-top: 8px; border-top: 1px solid #e5e7eb;
+		color: #6b7280; font-size: 11px; font-style: italic;
+	}
+</style>
+<div class="cbt-bs">
+	{% if not paid %}
+	<div class="cbt-bs-watermark">{{ "CANCELLED" if cancelled else "UNPAID" }}</div>
+	{% endif %}
+	<div class="cbt-bs-content">
+		<table class="cbt-bs-header">
+			<tr>
+				{% if company.logo %}
+				<td style="width: 25%;"><img class="cbt-bs-logo" src="{{ company.logo }}"></td>
+				{% endif %}
+				<td>
+					<div class="cbt-bs-company">{{ company.registered_name }}</div>
+					{% if company.tin %}<div class="cbt-bs-muted">TIN: {{ company.tin }}</div>{% endif %}
+					{% if company.address %}<div class="cbt-bs-muted">{{ company.address }}</div>{% endif %}
+					{% if branch %}
+					<div class="cbt-bs-muted">
+						{{ branch.branch_name }}{% if branch.address_text %} — {{ branch.address_text }}{% endif %}
+					</div>
+					{% endif %}
+				</td>
+			</tr>
+		</table>
+
+		<div class="cbt-bs-title">{{ doc.doc_title or "BILLING STATEMENT" }}</div>
+		<div class="cbt-bs-muted" style="text-align: center;">{{ doc.name }}</div>
+
+		<table class="cbt-bs-meta">
+			<tr>
+				<td><strong>{{ _("Customer") }}:</strong> {{ doc.customer_name or doc.customer }}</td>
+				<td class="cbt-bs-num"><strong>{{ _("Date") }}:</strong> {{ frappe.utils.formatdate(doc.posting_date, "MMM-dd-yyyy") }}</td>
+			</tr>
+			{% if doc.booking_group %}
+			<tr>
+				<td>
+					<strong>{{ _("Cart Ref") }}:</strong> {{ doc.booking_group }}
+					<span class="cbt-bs-muted">({{ frappe.db.count("CBT Court Booking", {"booking_group": doc.booking_group, "billing_doc": doc.name}) }} {{ _("bookings") }})</span>
+				</td>
+				<td></td>
+			</tr>
+			{% elif doc.booking %}
+			<tr>
+				<td><strong>{{ _("Booking Ref") }}:</strong> {{ doc.booking }}</td>
+				<td></td>
+			</tr>
+			{% elif doc.participant_ref %}
+			<tr>
+				<td><strong>{{ _("Open Play Ref") }}:</strong> {{ doc.participant_ref }}</td>
+				<td></td>
+			</tr>
+			{% endif %}
+		</table>
+
+		<table class="cbt-bs-items">
+			<tr>
+				<th>{{ _("Description") }}</th>
+				<th class="cbt-bs-num">{{ _("Qty (Hours)") }}</th>
+				<th class="cbt-bs-num">{{ _("Rate") }}</th>
+				<th class="cbt-bs-num">{{ _("Amount") }}</th>
+			</tr>
+			{% for item in doc.items %}
+			<tr>
+				<td>{{ item.description }}</td>
+				<td class="cbt-bs-num">{{ "%.2f" | format(frappe.utils.flt(item.qty)) }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(item.rate, currency="PHP") }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(item.amount, currency="PHP") }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+
+		<table class="cbt-bs-totals">
+			<tr>
+				<td style="width: 60%;"></td>
+				<td>{{ _("Subtotal") }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(doc.subtotal, currency="PHP") }}</td>
+			</tr>
+			{% if frappe.utils.flt(doc.discount_amount) %}
+			<tr>
+				<td></td>
+				<td>{{ _("Less: Discount") }}{% if frappe.utils.flt(doc.discount_percent) %} ({{ "%g" | format(frappe.utils.flt(doc.discount_percent)) }}%){% endif %}</td>
+				<td class="cbt-bs-num">-{{ frappe.utils.fmt_money(doc.discount_amount, currency="PHP") }}</td>
+			</tr>
+			{% endif %}
+			{% if doc.vat_mode == "VAT" %}
+			<tr>
+				<td></td>
+				<td>{{ _("VATable Sales") }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(doc.vatable_amount, currency="PHP") }}</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>{{ _("VAT") }} ({{ "%g" | format(vat_pct) }}%)</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(doc.vat_amount, currency="PHP") }}</td>
+			</tr>
+			{% endif %}
+			{#- Backlog B27: the platform's own line, never hidden inside the
+			    court's price (user ruling: "show the booking fee so we are
+			    transparent"). Backlog B29 ruling: it sits OUTSIDE the tenant's
+			    VAT footer — the VAT above is on the court share only, the fee is
+			    the platform's non-VAT revenue passing through. -#}
+			{%- set fee_as_if = frappe.utils.flt(doc.platform_fee) + frappe.utils.flt(doc.continuous_discount) -%}
+			{% if fee_as_if %}
+			<tr class="cbt-bs-fee-row">
+				<td></td>
+				<td>{{ _("Booking fee (platform, non-VAT)") if doc.vat_mode == "VAT" else _("Booking fee (platform)") }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(fee_as_if, currency="PHP") }}</td>
+			</tr>
+			{% endif %}
+			{#- Backlog B49: a continued session pays ONE fee; the rest prints as what it saved. -#}
+			{% if frappe.utils.flt(doc.continuous_discount) %}
+			<tr class="cbt-bs-discount-row">
+				<td></td>
+				<td>{{ _("Less: Continuous booking discount") }}</td>
+				<td class="cbt-bs-num">-{{ frappe.utils.fmt_money(doc.continuous_discount, currency="PHP") }}</td>
+			</tr>
+			{% endif %}
+			<tr class="cbt-bs-total-row">
+				<td></td>
+				<td>{{ _("TOTAL") }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(doc.total_amount, currency="PHP") }}</td>
+			</tr>
+			{#- Backlog B39: store credit is a PAYMENT, so it sits BELOW the total
+			    and never touches the VAT footer above it. -#}
+			{% if frappe.utils.flt(doc.credit_applied) %}
+			<tr class="cbt-bs-credit-row">
+				<td></td>
+				<td>{{ _("Less: Paid by store credit") }}</td>
+				<td class="cbt-bs-num">-{{ frappe.utils.fmt_money(doc.credit_applied, currency="PHP") }}</td>
+			</tr>
+			<tr class="cbt-bs-due-row">
+				<td></td>
+				<td>{{ _("AMOUNT DUE") }}</td>
+				<td class="cbt-bs-num">{{ frappe.utils.fmt_money(frappe.utils.flt(doc.total_amount) - frappe.utils.flt(doc.credit_applied), currency="PHP") }}</td>
+			</tr>
+			{% endif %}
+			{% if doc.vat_mode != "VAT" %}
+			<tr>
+				<td></td>
+				<td colspan="2" class="cbt-bs-num cbt-bs-nonvat">NON-VAT</td>
+			</tr>
+			{% endif %}
+		</table>
+
+		{#- Section-26: a refunded document says who reversed it and why — the
+		    paper the customer holds and the accountant files must both read the
+		    reason, not just the watermark. -#}
+		{% if cancelled and doc.refund_reason %}
+		<div class="cbt-bs-refund" style="margin-top: 16px; color: #b91c1c; font-weight: 700;">
+			{{ _("CANCELLED — refunded") }}{% if doc.refunded_by %} {{ _("by") }} {{ frappe.db.get_value("User", doc.refunded_by, "full_name") or doc.refunded_by }}{% endif %}{% if doc.cancelled_at %} {{ _("on") }} {{ frappe.utils.format_datetime(doc.cancelled_at) }}{% endif %}
+			<div style="font-weight: 400; color: #1f2937;">{{ _("Reason") }}: {{ doc.refund_reason }}</div>
+		</div>
+		{% endif %}
+
+		{% if paid %}
+		<div style="margin-top: 16px;">
+			<span class="cbt-bs-stamp">PAID &amp; VERIFIED</span>
+			<div class="cbt-bs-muted" style="margin-top: 6px;">
+				{{ _("Verified by") }} {{ frappe.db.get_value("User", doc.verified_by, "full_name") or doc.verified_by }}
+				{% if doc.verified_at %} — {{ frappe.utils.format_datetime(doc.verified_at) }}{% endif %}
+			</div>
+		</div>
+		{% endif %}
+
+		<div class="cbt-bs-or">
+			{{ _("Official O.R. No.") }}: {{ doc.or_number or "____________________" }}
+		</div>
+
+		<div class="cbt-bs-footer">
+			{#- No double period when the legal name already ends with one
+			    ("… Sports Corp.."). -#}
+			{{ _("System-generated billing statement — official invoice/receipt issued manually by {0}").format(company.registered_name) }}{% if not company.registered_name.endswith(".") %}.{% endif %}
+		</div>
+	</div>
+</div>

@@ -1,0 +1,13 @@
+# graphify extraction excludes (gitignore syntax; .gitignore is also respected automatically)
+# Session/local dirs
+.claude/
+graphify-out/
+# e2e runtime artifacts — all already covered by e2e/.gitignore; listed so the
+# exclusion survives a .gitignore edit. .venv/ and screenshots/ do exist on disk.
+e2e/.venv/
+e2e/.pytest_cache/
+e2e/auth_state/
+e2e/screenshots/
+# belt-and-braces (already in .gitignore; no node_modules/ exists in this repo today)
+node_modules/
+__pycache__/

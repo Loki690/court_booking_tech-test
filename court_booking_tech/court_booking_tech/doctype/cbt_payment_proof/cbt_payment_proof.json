@@ -1,0 +1,245 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "proof_section",
+  "booking",
+  "open_play_session",
+  "participant_ref",
+  "company",
+  "source",
+  "proof_column",
+  "status",
+  "uploaded_by",
+  "uploaded_at",
+  "file_section",
+  "file",
+  "file_column",
+  "reference_no",
+  "reference_set_by",
+  "payment_channel",
+  "remarks",
+  "review_section",
+  "rejected_by",
+  "rejected_at",
+  "review_column",
+  "rejection_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "proof_section",
+   "fieldtype": "Section Break",
+   "label": "Proof"
+  },
+  {
+   "description": "Set for a court booking's proof. Exactly one of Booking / Open Play Session is filled.",
+   "fieldname": "booking",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Booking",
+   "options": "CBT Court Booking",
+   "read_only": 1
+  },
+  {
+   "description": "Set for an open play participant's proof. These proofs carry NO verification clocks — the player is at the desk.",
+   "fieldname": "open_play_session",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Open Play Session",
+   "options": "CBT Open Play Session",
+   "read_only": 1
+  },
+  {
+   "description": "Participant row this proof pays for.",
+   "fieldname": "participant_ref",
+   "fieldtype": "Data",
+   "label": "Participant Ref",
+   "read_only": 1
+  },
+  {
+   "description": "Always mirrored server-side from the booking's company.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Who uploaded it: the customer from the portal, or staff on the customer's behalf.",
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Source",
+   "options": "Customer\nStaff",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "proof_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "description": "Changed only by the Accept / Reject review actions — never edited directly.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nAccepted\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uploaded_by",
+   "fieldtype": "Link",
+   "label": "Uploaded By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uploaded_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Uploaded At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "file_section",
+   "fieldtype": "Section Break",
+   "label": "File & Reference"
+  },
+  {
+   "description": "Private file (jpg/png/pdf) — never publicly reachable.",
+   "fieldname": "file",
+   "fieldtype": "Attach",
+   "label": "File",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "file_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Bank / GCash transaction reference. Typed by the uploader, correctable by staff at verification.",
+   "fieldname": "reference_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Reference No",
+   "read_only": 1
+  },
+  {
+   "description": "Set when STAFF typed or corrected the reference at review — empty means it is the uploader's own.",
+   "fieldname": "reference_set_by",
+   "fieldtype": "Link",
+   "label": "Reference Set By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "description": "The channel the uploader says the money went through (defaults to the booking's). Staff read it beside the receipt and correct the booking's channel if the money landed elsewhere.",
+   "fieldname": "payment_channel",
+   "fieldtype": "Link",
+   "label": "Payment Channel",
+   "options": "CBT Payment Channel",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks",
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_section",
+   "fieldtype": "Section Break",
+   "label": "Review"
+  },
+  {
+   "fieldname": "rejected_by",
+   "fieldtype": "Link",
+   "label": "Rejected By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejected_at",
+   "fieldtype": "Datetime",
+   "label": "Rejected At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Invalid / suspected fake expires the booking immediately; other reasons grant ONE re-upload grace window.",
+   "fieldname": "rejection_reason",
+   "fieldtype": "Select",
+   "label": "Rejection Reason",
+   "no_copy": 1,
+   "options": "\nInvalid / suspected fake\nUnreadable\nWrong amount\nWrong reference",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-08-27 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Payment Proof",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin"
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "booking,open_play_session,reference_no,status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "booking"
+}

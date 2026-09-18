@@ -1,0 +1,197 @@
+{
+ "actions": [],
+ "autoname": "format:{branch}-{court_slug}",
+ "creation": "2026-07-22 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "court_section",
+  "branch",
+  "company",
+  "court_slug",
+  "court_column",
+  "court_name",
+  "court_type",
+  "pricing_section",
+  "hourly_rate",
+  "pricing_column",
+  "is_active",
+  "allow_continuation",
+  "rate_rules_section",
+  "rate_rules",
+  "details_section",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "court_section",
+   "fieldtype": "Section Break",
+   "label": "Court"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "options": "CBT Branch",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "branch.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1
+  },
+  {
+   "description": "Derived from the court name at creation — part of the document ID.",
+   "fieldname": "court_slug",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Court Slug",
+   "read_only": 1
+  },
+  {
+   "fieldname": "court_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "court_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Court Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "court_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Court Type",
+   "options": "Pickleball\nBadminton\nBasketball\nTennis\nMulti-purpose",
+   "reqd": 1
+  },
+  {
+   "fieldname": "pricing_section",
+   "fieldtype": "Section Break",
+   "label": "Pricing & Status"
+  },
+  {
+   "description": "Base rate. Any Rate Rule below overrides it for the days and times it covers.",
+   "fieldname": "hourly_rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Base Hourly Rate",
+   "reqd": 1
+  },
+  {
+   "fieldname": "pricing_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "default": "0",
+   "description": "A session that continues onto this court from another continue-on court — same date, one checkout, the hours touching — counts as ONE booking fee. Off by default.",
+   "fieldname": "allow_continuation",
+   "fieldtype": "Check",
+   "label": "Continue-on court (one booking fee per session)"
+  },
+  {
+   "fieldname": "rate_rules_section",
+   "fieldtype": "Section Break",
+   "label": "Rate Rules"
+  },
+  {
+   "description": "Peak/off-peak and weekend pricing. A booking is priced PER SLOT: a session that crosses a rule boundary is billed at both rates, one statement line each. Leave empty for a flat-rate court.",
+   "fieldname": "rate_rules",
+   "fieldtype": "Table",
+   "label": "Rate Rules",
+   "options": "CBT Court Rate Rule"
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Court Booking",
+   "link_fieldname": "court"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Slot Block",
+   "link_fieldname": "court"
+  }
+ ],
+ "modified": "2026-08-27 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Court",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "court_name,court_type",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "court_name"
+}

@@ -1,0 +1,286 @@
+{
+ "actions": [],
+ "creation": "2026-08-27 18:00:00.000000",
+ "default_print_format": "CBT Platform Statement",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "statement_section",
+  "company",
+  "company_name",
+  "period",
+  "statement_date",
+  "statement_column",
+  "status",
+  "issued_by",
+  "issued_at",
+  "figures_section",
+  "billing_mode",
+  "commission_percent",
+  "subscription_fee",
+  "booking_count",
+  "booking_fees",
+  "figures_column",
+  "confirmed_revenue",
+  "amount_due",
+  "payment_section",
+  "paid_on",
+  "payment_reference",
+  "payment_channel",
+  "payment_column",
+  "paid_by",
+  "paid_at",
+  "cancellation_section",
+  "cancel_reason",
+  "cancellation_column",
+  "cancelled_by",
+  "cancelled_at"
+ ],
+ "fields": [
+  {
+   "description": "Issued by the platform from a closed month's frozen figures (CBT Platform Month Close → Issue statements). Numbered per tenant; a cancelled statement is retained and its number consumed. Nothing here is edited by hand — use Mark paid / Cancel statement.",
+   "fieldname": "statement_section",
+   "fieldtype": "Section Break",
+   "label": "Statement"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Name",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "description": "The calendar month billed, YYYY-MM — the CBT Platform Month Close it was issued from.",
+   "fieldname": "period",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Period",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "statement_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Statement Date",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "statement_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Issued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Issued\nPaid\nCancelled",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_at",
+   "fieldtype": "Datetime",
+   "label": "Issued At",
+   "read_only": 1
+  },
+  {
+   "description": "Copied from the month close at issue time and frozen with the statement.",
+   "fieldname": "figures_section",
+   "fieldtype": "Section Break",
+   "label": "Figures (frozen at issue)"
+  },
+  {
+   "fieldname": "billing_mode",
+   "fieldtype": "Data",
+   "label": "Billing Mode",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_percent",
+   "fieldtype": "Percent",
+   "label": "Commission (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subscription_fee",
+   "fieldtype": "Currency",
+   "label": "Subscription Fee",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "description": "Per Booking tenants: PAID documents that carried a fee in the period — court bookings AND open play entries.",
+   "fieldname": "booking_count",
+   "fieldtype": "Int",
+   "label": "Fee Units",
+   "read_only": 1
+  },
+  {
+   "description": "Per Booking tenants: the booking fees their customers paid, collected by the tenant for the platform.",
+   "fieldname": "booking_fees",
+   "fieldtype": "Currency",
+   "label": "Booking Fees",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "figures_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "confirmed_revenue",
+   "fieldtype": "Currency",
+   "label": "Confirmed Revenue",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "amount_due",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount Due",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status==='Paid'",
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment"
+  },
+  {
+   "fieldname": "paid_on",
+   "fieldtype": "Date",
+   "label": "Paid On",
+   "read_only": 1
+  },
+  {
+   "description": "The transfer or deposit reference the tenant sent — printed on the statement.",
+   "fieldname": "payment_reference",
+   "fieldtype": "Data",
+   "label": "Payment Reference",
+   "read_only": 1
+  },
+  {
+   "description": "The PLATFORM's channel the tenant's payment arrived through (our GCash, our bank) — so our books and theirs reconcile on the same key.",
+   "fieldname": "payment_channel",
+   "fieldtype": "Link",
+   "label": "Received Via",
+   "options": "CBT Payment Channel",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "paid_by",
+   "fieldtype": "Link",
+   "label": "Marked Paid By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "paid_at",
+   "fieldtype": "Datetime",
+   "label": "Marked Paid At",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status==='Cancelled'",
+   "fieldname": "cancellation_section",
+   "fieldtype": "Section Break",
+   "label": "Cancellation"
+  },
+  {
+   "fieldname": "cancel_reason",
+   "fieldtype": "Small Text",
+   "label": "Cancel Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cancellation_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cancelled_by",
+   "fieldtype": "Link",
+   "label": "Cancelled By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cancelled_at",
+   "fieldtype": "Datetime",
+   "label": "Cancelled At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-27 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Platform Statement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin"
+  }
+ ],
+ "search_fields": "company_name,period,status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

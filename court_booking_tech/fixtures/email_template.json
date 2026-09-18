@@ -1,0 +1,47 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Email Template",
+  "modified": "2026-07-23 00:00:00.000000",
+  "name": "CBT Proof Rejected",
+  "subject": "Action needed: your payment proof for {{ booking }} was not accepted",
+  "use_html": 1,
+  "response_html": "<p>Hi {{ customer_name }},</p>\n<p>{{ company_name }} reviewed the payment proof you sent for your booking at <strong>{{ branch_name }}</strong> and could not accept it.</p>\n<table cellpadding=\"6\" style=\"border-collapse:collapse\">\n  <tr><td><strong>Booking</strong></td><td>{{ booking }}</td></tr>\n  <tr><td><strong>Court</strong></td><td>{{ court_name }}</td></tr>\n  <tr><td><strong>When</strong></td><td>{{ when }}</td></tr>\n  <tr><td><strong>Amount</strong></td><td>PHP {{ amount }}</td></tr>\n  <tr><td><strong>Reason</strong></td><td>{{ reason }}</td></tr>\n</table>\n{% if outcome == 'Regrace' %}\n<p>You can upload a clearer proof until <strong>{{ regrace_until }}</strong>. After that the slot is released.</p>\n<p><a href=\"{{ booking_url }}\">Upload a new proof</a></p>\n{% else %}\n<p>This reservation has been released and the slot is available to other players again. If you already paid, please contact the branch directly.</p>\n<p><a href=\"{{ booking_url }}\">View this booking</a></p>\n{% endif %}\n<p>— {{ company_name }}</p>"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Email Template",
+  "modified": "2026-09-04 00:00:00.000000",
+  "name": "CBT Cart Confirmed",
+  "subject": "Your {{ count }} bookings are confirmed",
+  "use_html": 1,
+  "response_html": "<p>Hi {{ customer_name }},</p>\n<p>Your payment has been verified — all {{ count }} bookings below are reserved. See you at <strong>{{ branch_name }}</strong>!</p>\n<table cellpadding=\"6\" style=\"border-collapse:collapse\">\n  <tr><td><strong>Facility</strong></td><td>{{ company_name }} — {{ branch_name }}</td></tr>\n{% for row in rows %}  <tr><td><strong>{{ row.court_name }}</strong></td><td>{{ row.when }} — {{ row.booking }}</td></tr>\n{% endfor %}  <tr><td><strong>Total paid</strong></td><td>PHP {{ amount }}</td></tr>\n</table>\n<p>You paid for these together, so this is one confirmation for all of them.</p>\n<p><a href=\"{{ bookings_url }}\">View your bookings</a></p>\n<p>— {{ company_name }}</p>"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Email Template",
+  "modified": "2026-07-23 00:00:00.000000",
+  "name": "CBT Booking Confirmed",
+  "subject": "Your booking {{ booking }} is confirmed",
+  "use_html": 1,
+  "response_html": "<p>Hi {{ customer_name }},</p>\n<p>Your payment has been verified — your court is reserved. See you at <strong>{{ branch_name }}</strong>!</p>\n<table cellpadding=\"6\" style=\"border-collapse:collapse\">\n  <tr><td><strong>Booking</strong></td><td>{{ booking }}</td></tr>\n  <tr><td><strong>Facility</strong></td><td>{{ company_name }} — {{ branch_name }}</td></tr>\n  <tr><td><strong>Court</strong></td><td>{{ court_name }}</td></tr>\n  <tr><td><strong>When</strong></td><td>{{ when }}</td></tr>\n  <tr><td><strong>Amount paid</strong></td><td>PHP {{ amount }}</td></tr>\n</table>\n<p><a href=\"{{ billing_url }}\">View or print your billing statement</a></p>\n<p><a href=\"{{ booking_url }}\">View this booking</a></p>\n<p>— {{ company_name }}</p>"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Email Template",
+  "modified": "2026-07-30 00:00:00.000000",
+  "name": "CBT Booking Rescheduled",
+  "subject": "Your booking has been moved to {{ when }}",
+  "use_html": 1,
+  "response_html": "<p>Hi {{ customer_name }},</p>\n<p>{{ company_name }} has moved your booking to a new slot at <strong>{{ branch_name }}</strong>.</p>\n<table cellpadding=\"6\" style=\"border-collapse:collapse\">\n  <tr><td><strong>Was</strong></td><td>{{ old_court_name }} &middot; {{ old_when }}{% if old_branch_name %} &middot; {{ old_branch_name }}{% endif %}</td></tr>\n  <tr><td><strong>Now</strong></td><td>{{ court_name }} &middot; {{ when }}{% if old_branch_name %} &middot; {{ branch_name }}{% endif %}</td></tr>\n  <tr><td><strong>Booking</strong></td><td>{{ booking }} (replaces {{ old_booking }})</td></tr>\n  <tr><td><strong>Amount</strong></td><td>PHP {{ amount }}</td></tr>\n</table>\n{% if verify_by %}\n<p>Your payment proof is still being reviewed — {{ company_name }} expects to have a decision by <strong>{{ verify_by }}</strong>. You do not need to pay again.</p>\n{% elif pay_by %}\n<p>This booking is <strong>not paid for yet</strong>. Please pay and upload your proof by <strong>{{ pay_by }}</strong>, or the new slot is released.</p>\n{% else %}\n<p>Your payment carries over — nothing more is needed from you.</p>\n{% endif %}\n<p><a href=\"{{ booking_url }}\">View this booking</a></p>\n<p><a href=\"{{ billing_url }}\">View or print your billing statement</a></p>\n<p>— {{ company_name }}</p>"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Email Template",
+  "modified": "2026-08-27 00:00:00.000000",
+  "name": "CBT Account Already Exists",
+  "subject": "You already have an account with this email",
+  "use_html": 1,
+  "response_html": "<p>Hi,</p>\n<p>Someone, most likely you, just tried to create a new account with <strong>{{ email }}</strong>, but an account with this address already exists. Nothing was changed.</p>\n<p><a href=\"{{ login_url }}\">Log in</a> with your existing password, or <a href=\"{{ forgot_url }}\">reset your password</a> if you have forgotten it.</p>\n<p>If this was not you, you can ignore this message. Nobody can get into your account from it.</p>"
+ }
+]

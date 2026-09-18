@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "creation": "2026-07-24 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "court",
+  "court_name",
+  "player_1",
+  "player_2",
+  "player_3",
+  "player_4",
+  "started_at",
+  "ends_at",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "court",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Court",
+   "options": "CBT Court",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "court.court_name",
+   "fieldname": "court_name",
+   "fieldtype": "Data",
+   "label": "Court Name",
+   "read_only": 1
+  },
+  {
+   "description": "PLAYER KEY, not a User link: the account id for a player with one, otherwise their CBT Open Play Queue row name. A walk-in has no account, and a NULL here would alias every walk-in in the session into one identity. Resolve it for display through the board payload, never by reading User.",
+   "fieldname": "player_1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Player 1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "player_2",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Player 2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "player_3",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Player 3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "player_4",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Player 4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "description": "Timed rotation only — the server-computed moment this game is due to end.",
+   "fieldname": "ends_at",
+   "fieldtype": "Datetime",
+   "label": "Ends At",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-24 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Open Play Assignment",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

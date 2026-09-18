@@ -1,0 +1,6 @@
+.venv/
+auth_state/
+__pycache__/
+.pytest_cache/
+screenshots/
+test-results/

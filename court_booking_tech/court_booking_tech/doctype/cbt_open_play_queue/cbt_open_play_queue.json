@@ -1,0 +1,85 @@
+{
+ "actions": [],
+ "creation": "2026-07-24 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "customer_name",
+  "queue_position",
+  "status",
+  "games_played",
+  "joined_at",
+  "participant_ref"
+ ],
+ "fields": [
+  {
+   "description": "Empty for a walk-in. The rotation engine keys on court_booking_tech.api.open_play._player_key(row), which falls back to this ROW's name - never on customer alone.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "User"
+  },
+  {
+   "description": "Fetched from the account when one is set; free text for a walk-in.",
+   "fetch_from": "customer.full_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "mandatory_depends_on": "eval:!doc.customer",
+   "read_only_depends_on": "eval:doc.customer"
+  },
+  {
+   "description": "1-based position among WAITING players only, with no gaps. Playing / Done / Left rows carry 0.",
+   "fieldname": "queue_position",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Queue Position",
+   "read_only": 1
+  },
+  {
+   "default": "Waiting",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Waiting\nPlaying\nDone\nLeft",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "games_played",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Games Played",
+   "read_only": 1
+  },
+  {
+   "fieldname": "joined_at",
+   "fieldtype": "Datetime",
+   "label": "Joined At",
+   "read_only": 1
+  },
+  {
+   "description": "Row name of this player's participant record. A player who leaves and rejoins gets a FRESH participant + queue pair, so matching on customer alone would be ambiguous.",
+   "fieldname": "participant_ref",
+   "fieldtype": "Data",
+   "label": "Participant Ref",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-24 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Open Play Queue",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

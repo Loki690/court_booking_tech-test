@@ -1,0 +1,490 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-22 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "booking_section",
+  "company",
+  "branch",
+  "court",
+  "booking_column",
+  "customer",
+  "customer_name",
+  "customer_phone",
+  "booking_status",
+  "schedule_section",
+  "booking_date",
+  "start_time",
+  "number_of_slots",
+  "schedule_column",
+  "end_time",
+  "duration_hours",
+  "payment_section",
+  "payment_method",
+  "payment_channel",
+  "hourly_rate",
+  "discount_percent",
+  "payment_column",
+  "total_amount",
+  "platform_fee",
+  "platform_fee_seq",
+  "fee_chained_to",
+  "platform_fee_waived",
+  "credit_applied",
+  "credit_document",
+  "credit_restored_at",
+  "reservation_expires_at",
+  "verification_deadline_at",
+  "rejection_count",
+  "rate_segments_section",
+  "rate_segments",
+  "confirmation_section",
+  "confirmed_by",
+  "confirmed_at",
+  "checked_in_at",
+  "checked_in_by",
+  "confirmation_column",
+  "extended_from",
+  "rescheduled_from",
+  "rescheduled_to",
+  "booking_group",
+  "billing_doc",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "booking_section",
+   "fieldtype": "Section Break",
+   "label": "Booking"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "options": "CBT Branch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "court",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Court",
+   "options": "CBT Court",
+   "reqd": 1
+  },
+  {
+   "fieldname": "booking_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Leave EMPTY for a walk-in paying at the desk — then Customer Name is the receipt identity.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "User"
+  },
+  {
+   "description": "Fetched from the account when one is set; free text for a walk-in.",
+   "fetch_from": "customer.full_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "mandatory_depends_on": "eval:!doc.customer",
+   "read_only_depends_on": "eval:doc.customer"
+  },
+  {
+   "depends_on": "eval:!doc.customer",
+   "description": "Walk-ins only — contact number for court issues. Staff-visible.",
+   "fieldname": "customer_phone",
+   "fieldtype": "Data",
+   "label": "Customer Phone"
+  },
+  {
+   "default": "Reserved",
+   "description": "Changed only through the Confirm / Cancel / Extend / Check in / Undo no-show actions and the per-minute sweep (which both expires unpaid holds and releases un-checked-in no-shows) — never edited directly.",
+   "fieldname": "booking_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Booking Status",
+   "options": "Reserved\nConfirmed\nExtended\nCompleted\nCancelled\nExpired\nNo Show",
+   "read_only": 1
+  },
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "booking_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Booking Date",
+   "reqd": 1
+  },
+  {
+   "description": "Must be the start of a slot on the branch's grid for that day.",
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "label": "Start Time",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "description": "Consecutive slots booked in one go.",
+   "fieldname": "number_of_slots",
+   "fieldtype": "Int",
+   "label": "Number of Slots",
+   "reqd": 1
+  },
+  {
+   "fieldname": "schedule_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "End Time",
+   "read_only": 1
+  },
+  {
+   "description": "Billable court time — turnover buffers between slots are not billed.",
+   "fieldname": "duration_hours",
+   "fieldtype": "Float",
+   "label": "Duration (Hours)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment"
+  },
+  {
+   "description": "Cash and Free confirm instantly; Fund Transfer holds the slot until proof is verified (or the hold expires).",
+   "fieldname": "payment_method",
+   "fieldtype": "Select",
+   "label": "Payment Method",
+   "options": "Cash\nFund Transfer\nFree",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.payment_method!=='Free'",
+   "description": "WHERE the money landed — one of the company's enabled channels of the payment method's kind (Cash → a Cash channel; Fund Transfer → GCash or a bank). Left empty, the company's first enabled channel of that kind is used. Staff may correct it when verifying the proof.",
+   "fieldname": "payment_channel",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Payment Channel",
+   "options": "CBT Payment Channel"
+  },
+  {
+   "description": "Leave as the court's base rate to let the court's rate rules price each slot; type a different rate to override them for this booking. On a booking priced by rate rules this shows the BLENDED average of its segments — display only.",
+   "fetch_from": "court.hourly_rate",
+   "fetch_if_empty": 1,
+   "fieldname": "hourly_rate",
+   "fieldtype": "Currency",
+   "label": "Hourly Rate",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "discount_percent",
+   "fieldtype": "Percent",
+   "label": "Discount (%)"
+  },
+  {
+   "fieldname": "payment_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "What the customer pays: the court (after discount) plus the platform booking fee, if any.",
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "description": "The platform's per-booking fee the customer pays on top of the court, fixed when the booking was made from the company's tiers and printed as its own line (outside the tenant's VAT). 0 unless the company is billed Per Booking; always 0 for a Free booking.",
+   "fieldname": "platform_fee",
+   "fieldtype": "Currency",
+   "label": "Booking Fee (Platform)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The company's count of fee-carrying bookings for this service month at the moment of sale, +1 — the number the tier was read at. Not unique: an expired hold that is later retro-confirmed shares its number with the sale that took its place. 0 = carries no fee unit.",
+   "fieldname": "platform_fee_seq",
+   "fieldtype": "Int",
+   "label": "Fee Unit #",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The first hour of the continuous session this booking continues — the booking that carries the session's one fee. Empty for a head or a lone booking.",
+   "fieldname": "fee_chained_to",
+   "fieldtype": "Link",
+   "label": "Fee Chained To",
+   "no_copy": 1,
+   "options": "CBT Court Booking",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "The booking fee this continuation would have carried on its own, printed as 'Continuous booking discount'. 0 for a head or a lone booking.",
+   "fieldname": "platform_fee_waived",
+   "fieldtype": "Currency",
+   "label": "Booking Fee Waived (Continuation)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Base clock: an unpaid Fund Transfer hold expires at this time unless a payment proof is uploaded first.",
+   "fieldname": "reservation_expires_at",
+   "fieldtype": "Datetime",
+   "label": "Reservation Expires At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "How much of this booking's price was settled with store credit. It is a PAYMENT, not a discount — the total and the VAT footer are untouched.",
+   "fieldname": "credit_applied",
+   "fieldtype": "Currency",
+   "label": "Credit Applied",
+   "no_copy": 1,
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "description": "The store credit this booking drew on.",
+   "fieldname": "credit_document",
+   "fieldtype": "Link",
+   "label": "Credit Document",
+   "no_copy": 1,
+   "options": "CBT Customer Credit",
+   "read_only": 1
+  },
+  {
+   "description": "When the credit went back to the customer because this booking died. A NO SHOW is never restored — that money is forfeit.",
+   "fieldname": "credit_restored_at",
+   "fieldtype": "Datetime",
+   "label": "Credit Restored At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Verification clock deadline — set by the payment-proof engine.",
+   "fieldname": "verification_deadline_at",
+   "fieldtype": "Datetime",
+   "label": "Verification Deadline At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "rejection_count",
+   "fieldtype": "Int",
+   "label": "Rejection Count",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "rate_segments",
+   "fieldname": "rate_segments_section",
+   "fieldtype": "Section Break",
+   "label": "Rate Breakdown"
+  },
+  {
+   "description": "This booking's own pricing snapshot, taken from the court's rate rules when it was created. Empty means a single flat rate applies. Editing the Hourly Rate above clears it and re-prices the booking flat.",
+   "fieldname": "rate_segments",
+   "fieldtype": "Table",
+   "label": "Rate Segments",
+   "no_copy": 1,
+   "options": "CBT Booking Rate Segment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmation_section",
+   "fieldtype": "Section Break",
+   "label": "Confirmation & Links"
+  },
+  {
+   "fieldname": "confirmed_by",
+   "fieldtype": "Link",
+   "label": "Confirmed By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_at",
+   "fieldtype": "Datetime",
+   "label": "Confirmed At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "When someone actually turned up. Set by the Check in action, and automatically for an extension or a slot the desk back-records after it started. Empty is what makes a booking eligible for no-show release.",
+   "fieldname": "checked_in_at",
+   "fieldtype": "Datetime",
+   "label": "Checked In At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "checked_in_by",
+   "fieldtype": "Link",
+   "label": "Checked In By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmation_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The booking this one extends (set by the Extend action).",
+   "fieldname": "extended_from",
+   "fieldtype": "Link",
+   "label": "Extended From",
+   "no_copy": 1,
+   "options": "CBT Court Booking",
+   "read_only": 1
+  },
+  {
+   "description": "The booking this one replaces (set by the Reschedule action).",
+   "fieldname": "rescheduled_from",
+   "fieldtype": "Link",
+   "label": "Rescheduled From",
+   "no_copy": 1,
+   "options": "CBT Court Booking",
+   "read_only": 1
+  },
+  {
+   "description": "Where this booking was moved to (set on the ORIGINAL when it is rescheduled).",
+   "fieldname": "rescheduled_to",
+   "fieldtype": "Link",
+   "label": "Rescheduled To",
+   "no_copy": 1,
+   "options": "CBT Court Booking",
+   "read_only": 1
+  },
+  {
+   "description": "The cart this booking was reserved in. Every row of one checkout shares it, and they share one pay-by clock, one payment proof and one verification. Empty for a booking made on its own.",
+   "fieldname": "booking_group",
+   "fieldtype": "Data",
+   "label": "Booking Group",
+   "no_copy": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "description": "The billing statement issued for this booking (created automatically).",
+   "fieldname": "billing_doc",
+   "fieldtype": "Link",
+   "label": "Billing Document",
+   "no_copy": 1,
+   "options": "CBT Booking Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Billing",
+   "link_doctype": "CBT Booking Invoice",
+   "link_fieldname": "booking"
+  },
+  {
+   "group": "Billing",
+   "link_doctype": "CBT Payment Proof",
+   "link_fieldname": "booking"
+  },
+  {
+   "group": "Billing",
+   "link_doctype": "CBT Customer Credit",
+   "link_fieldname": "source_booking"
+  },
+  {
+   "group": "Extensions",
+   "link_doctype": "CBT Court Booking",
+   "link_fieldname": "extended_from"
+  }
+ ],
+ "modified": "2026-09-04 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Court Booking",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff",
+   "write": 1
+  }
+ ],
+ "search_fields": "customer_name,court,booking_date",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer_name"
+}

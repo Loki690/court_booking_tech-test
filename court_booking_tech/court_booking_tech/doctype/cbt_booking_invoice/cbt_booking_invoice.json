@@ -1,0 +1,445 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-23 12:00:00.000000",
+ "default_print_format": "CBT Billing Statement",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "invoice_section",
+  "company",
+  "branch",
+  "booking",
+  "booking_group",
+  "participant_ref",
+  "invoice_column",
+  "customer",
+  "customer_name",
+  "posting_date",
+  "status",
+  "items_section",
+  "items",
+  "totals_section",
+  "subtotal",
+  "discount_percent",
+  "discount_amount",
+  "totals_column",
+  "platform_fee",
+  "continuous_discount",
+  "total_amount",
+  "credit_applied",
+  "vat_section",
+  "vat_mode",
+  "vat_percent",
+  "vat_column",
+  "vatable_amount",
+  "vat_amount",
+  "verification_section",
+  "verified_by",
+  "verified_at",
+  "payment_channel",
+  "verification_column",
+  "or_number",
+  "cancelled_at",
+  "refund_reason",
+  "refunded_by",
+  "refund_cause",
+  "refund_as_credit",
+  "doc_title"
+ ],
+ "fields": [
+  {
+   "fieldname": "invoice_section",
+   "fieldtype": "Section Break",
+   "label": "Billing Document"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "permlevel": 1,
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "options": "CBT Branch",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "booking",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Booking",
+   "options": "CBT Court Booking",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The cart this document bills. Set only when the booking was made in a multi-booking checkout — every row of that cart shares THIS one document. `booking` names the row it was created for and is never re-pointed; the print shows the group.",
+   "fieldname": "booking_group",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Booking Group",
+   "permlevel": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "description": "Open Play participant row this document bills.",
+   "fieldname": "participant_ref",
+   "fieldtype": "Data",
+   "label": "Participant Ref",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "invoice_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Empty on a walk-in document — customer_name carries the receipt identity.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "User",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "default": "Unpaid",
+   "description": "Derived from the booking: Paid & Verified on confirmation, Cancelled when the booking is cancelled or expires. Never edited directly.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Unpaid\nPaid & Verified\nCancelled",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "CBT Invoice Item",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "subtotal",
+   "fieldtype": "Currency",
+   "label": "Subtotal",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_percent",
+   "fieldtype": "Percent",
+   "label": "Discount (%)",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "totals_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The platform's per-booking fee the customer pays on top (Per Booking tenants only). Printed as its own line; never discounted; OUTSIDE the VAT footer — the fee is the platform's non-VAT revenue, and the tenant's VAT is on the court share only.",
+   "fieldname": "platform_fee",
+   "fieldtype": "Currency",
+   "label": "Booking Fee (Platform)",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "The booking fees waived on this document's continuations, printed as 'Less: Continuous booking discount' under a fee line showing what the bookings would have carried. Never inside the total — platform_fee already excludes it.",
+   "fieldname": "continuous_discount",
+   "fieldtype": "Currency",
+   "label": "Continuous Booking Discount",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "What the customer pays: subtotal − discount + booking fee.",
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Amount",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "How much of the total was settled with store credit rather than money. A PAYMENT, not a discount — the total and the VAT footer are untouched, and the collections report nets this out of what was collected.",
+   "fieldname": "credit_applied",
+   "fieldtype": "Currency",
+   "label": "Paid by Credit",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "vat_section",
+   "fieldtype": "Section Break",
+   "label": "VAT"
+  },
+  {
+   "description": "Snapshot of the company's VAT registration at creation — a later company VAT change never rewrites history.",
+   "fieldname": "vat_mode",
+   "fieldtype": "Select",
+   "label": "VAT Mode",
+   "options": "VAT\nNON-VAT",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "vat_percent",
+   "fieldtype": "Percent",
+   "label": "VAT (%)",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "vat_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "VAT-INCLUSIVE math over the COURT SHARE: (total − booking fee) ÷ (1 + VAT%). Empty for NON-VAT.",
+   "fieldname": "vatable_amount",
+   "fieldtype": "Currency",
+   "label": "VATable Sales",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "vat_amount",
+   "fieldtype": "Currency",
+   "label": "VAT Amount",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "verification_section",
+   "fieldtype": "Section Break",
+   "label": "Verification & O.R."
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "no_copy": 1,
+   "options": "User",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "verified_at",
+   "fieldtype": "Datetime",
+   "label": "Verified At",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "The channel the payment came through, copied from the booking / participant on every sync — the reconciliation key (CBT Collections by Channel, CBT Tenant Ledger).",
+   "fieldname": "payment_channel",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Payment Channel",
+   "no_copy": 1,
+   "options": "CBT Payment Channel",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "verification_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The manual O.R./invoice number issued from the company's own BIR-registered pad (staff cross-reference; not synced anywhere).",
+   "fieldname": "or_number",
+   "fieldtype": "Data",
+   "label": "Official O.R. No.",
+   "no_copy": 1
+  },
+  {
+   "description": "When this document went Cancelled (stamped by the billing engine; cleared by a retro-confirm). A PAID document cancelled later keeps its verification stamps AND gains this one — the Tenant Ledger posts the reversal on this date.",
+   "fieldname": "cancelled_at",
+   "fieldtype": "Datetime",
+   "label": "Cancelled At",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.refund_reason",
+   "description": "Why a PAID document was cancelled — typed by the Company Admin who refunded it, stamped by the billing engine on the cancelling save. Read on the Tenant Ledger's reversal line and the printed statement.",
+   "fieldname": "refund_reason",
+   "fieldtype": "Small Text",
+   "label": "Refund Reason",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.refunded_by",
+   "fieldname": "refunded_by",
+   "fieldtype": "Link",
+   "label": "Refunded By",
+   "no_copy": 1,
+   "options": "User",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.refund_cause",
+   "description": "Whose cancellation this was. A facility-fault cancellation returns cash whatever the company's Refund Policy says, so the record has to say which it was.",
+   "fieldname": "refund_cause",
+   "fieldtype": "Select",
+   "label": "Refund Cause",
+   "no_copy": 1,
+   "options": "\nCustomer request\nFacility fault",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.refund_as_credit",
+   "description": "The money left as STORE CREDIT, not cash. Without this a money report cannot tell the two apart, and a Reschedule only company would appear to pay out cash it never paid.",
+   "fieldname": "refund_as_credit",
+   "fieldtype": "Check",
+   "label": "Refunded As Store Credit",
+   "no_copy": 1,
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Snapshot of the company's billing document title (EOPT-safe default: BILLING STATEMENT).",
+   "fieldname": "doc_title",
+   "fieldtype": "Data",
+   "label": "Document Title",
+   "permlevel": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Billing",
+   "link_doctype": "CBT Customer Credit",
+   "link_fieldname": "source_invoice"
+  }
+ ],
+ "modified": "2026-09-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Booking Invoice",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Platform Admin"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Company Admin"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "customer_name,booking,or_number",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer_name"
+}

@@ -1,0 +1,526 @@
+{
+ "app": "court_booking_tech",
+ "charts": [],
+ "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>At a glance</b></span>\", \"col\": 12}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Active Bookings\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Proofs\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Memberships\", \"col\": 4}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Bookings</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Court Board\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Court Booking\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Slot Block\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Booking Invoice\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Payment Proof\", \"col\": 3}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Open Play</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Play Board\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Open Play Session\", \"col\": 3}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Members</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Membership\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Customer Ban\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Customer Profile\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Customer Credit\", \"col\": 3}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Facilities</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Branch\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Court\", \"col\": 3}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Reports</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Company Revenue\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Collections by Channel\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Tenant Ledger\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Occupancy\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Platform Revenue\", \"col\": 3}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Tenants</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Company\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Company User\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Payment Channel\", \"col\": 3}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Platform</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Platform Settings\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Platform Month Close\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Platform Statement\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"CBT Ad\", \"col\": 3}}]",
+ "creation": "2026-07-22 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "settings",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "CBT Hub",
+ "link_type": "DocType",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bookings",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Court Board",
+   "link_count": 0,
+   "link_to": "cbt-court-board",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Court Booking",
+   "link_count": 0,
+   "link_to": "CBT Court Booking",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Slot Block",
+   "link_count": 0,
+   "link_to": "CBT Slot Block",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Booking Invoice",
+   "link_count": 0,
+   "link_to": "CBT Booking Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Payment Proof",
+   "link_count": 0,
+   "link_to": "CBT Payment Proof",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Open Play",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Open Play Board",
+   "link_count": 0,
+   "link_to": "cbt-open-play-board",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Open Play Session",
+   "link_count": 0,
+   "link_to": "CBT Open Play Session",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Members",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Membership",
+   "link_count": 0,
+   "link_to": "CBT Membership",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Customer Ban",
+   "link_count": 0,
+   "link_to": "CBT Customer Ban",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Customer Profile",
+   "link_count": 0,
+   "link_to": "CBT Customer Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Customer Credit",
+   "link_count": 0,
+   "link_to": "CBT Customer Credit",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Facilities",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Branch",
+   "link_count": 0,
+   "link_to": "CBT Branch",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Court",
+   "link_count": 0,
+   "link_to": "CBT Court",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "CBT Company Revenue",
+   "link_count": 0,
+   "link_to": "CBT Company Revenue",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "CBT Collections by Channel",
+   "link_count": 0,
+   "link_to": "CBT Collections by Channel",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "CBT Tenant Ledger",
+   "link_count": 0,
+   "link_to": "CBT Tenant Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "CBT Occupancy",
+   "link_count": 0,
+   "link_to": "CBT Occupancy",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "CBT Platform Revenue",
+   "link_count": 0,
+   "link_to": "CBT Platform Revenue",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tenants",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Company",
+   "link_count": 0,
+   "link_to": "CBT Company",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Company User",
+   "link_count": 0,
+   "link_to": "CBT Company User",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Payment Channel",
+   "link_count": 0,
+   "link_to": "CBT Payment Channel",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Platform",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Platform Settings",
+   "link_count": 0,
+   "link_to": "CBT Platform Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Platform Month Close",
+   "link_count": 0,
+   "link_to": "CBT Platform Month Close",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "CBT Platform Statement",
+   "link_count": 0,
+   "link_to": "CBT Platform Statement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-09-11 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Hub",
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Court Board",
+   "link_to": "cbt-court-board",
+   "type": "Page"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "CBT Court Booking",
+   "link_to": "CBT Court Booking",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "CBT Slot Block",
+   "link_to": "CBT Slot Block",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "CBT Booking Invoice",
+   "link_to": "CBT Booking Invoice",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "CBT Payment Proof",
+   "link_to": "CBT Payment Proof",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Open Play Board",
+   "link_to": "cbt-open-play-board",
+   "type": "Page"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "CBT Open Play Session",
+   "link_to": "CBT Open Play Session",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "label": "CBT Membership",
+   "link_to": "CBT Membership",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "CBT Customer Ban",
+   "link_to": "CBT Customer Ban",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "label": "CBT Customer Profile",
+   "link_to": "CBT Customer Profile",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "label": "CBT Customer Credit",
+   "link_to": "CBT Customer Credit",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "CBT Branch",
+   "link_to": "CBT Branch",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "CBT Court",
+   "link_to": "CBT Court",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "CBT Company Revenue",
+   "link_to": "CBT Company Revenue",
+   "type": "Report"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "CBT Collections by Channel",
+   "link_to": "CBT Collections by Channel",
+   "type": "Report"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "CBT Tenant Ledger",
+   "link_to": "CBT Tenant Ledger",
+   "type": "Report"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "CBT Occupancy",
+   "link_to": "CBT Occupancy",
+   "type": "Report"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "CBT Platform Revenue",
+   "link_to": "CBT Platform Revenue",
+   "type": "Report"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "CBT Company",
+   "link_to": "CBT Company",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "CBT Company User",
+   "link_to": "CBT Company User",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "CBT Payment Channel",
+   "link_to": "CBT Payment Channel",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "CBT Platform Settings",
+   "link_to": "CBT Platform Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "CBT Platform Month Close",
+   "link_to": "CBT Platform Month Close",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "CBT Platform Statement",
+   "link_to": "CBT Platform Statement",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "CBT Ad",
+   "link_to": "CBT Ad",
+   "type": "DocType"
+  }
+ ],
+ "title": "CBT Hub",
+ "type": "Workspace",
+ "number_cards": [
+  {
+   "label": "Active Bookings",
+   "number_card_name": "CBT Active Bookings"
+  },
+  {
+   "label": "Pending Proofs",
+   "number_card_name": "CBT Pending Proofs"
+  },
+  {
+   "label": "Memberships",
+   "number_card_name": "CBT Memberships"
+  }
+ ]
+}

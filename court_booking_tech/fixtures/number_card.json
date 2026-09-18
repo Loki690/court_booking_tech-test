@@ -1,0 +1,47 @@
+[
+ {
+  "doctype": "Number Card",
+  "name": "CBT Active Bookings",
+  "label": "Active Bookings",
+  "type": "Document Type",
+  "document_type": "CBT Court Booking",
+  "function": "Count",
+  "filters_json": "[[\"CBT Court Booking\",\"booking_status\",\"in\",[\"Reserved\",\"Confirmed\",\"Extended\"]]]",
+  "is_public": 1,
+  "is_standard": 0,
+  "module": "",
+  "show_percentage_stats": 0,
+  "show_full_number": 1,
+  "color": "#0e7c5b"
+ },
+ {
+  "doctype": "Number Card",
+  "name": "CBT Pending Proofs",
+  "label": "Pending Proofs",
+  "type": "Document Type",
+  "document_type": "CBT Payment Proof",
+  "function": "Count",
+  "filters_json": "[[\"CBT Payment Proof\",\"status\",\"=\",\"Pending\"]]",
+  "is_public": 1,
+  "is_standard": 0,
+  "module": "",
+  "show_percentage_stats": 0,
+  "show_full_number": 1,
+  "color": "#f5a623"
+ },
+ {
+  "doctype": "Number Card",
+  "name": "CBT Memberships",
+  "label": "Memberships",
+  "type": "Document Type",
+  "document_type": "CBT Membership",
+  "function": "Count",
+  "filters_json": "[]",
+  "is_public": 1,
+  "is_standard": 0,
+  "module": "",
+  "show_percentage_stats": 0,
+  "show_full_number": 1,
+  "color": "#0a5c44"
+ }
+]

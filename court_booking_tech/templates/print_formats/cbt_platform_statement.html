@@ -1,0 +1,157 @@
+{#- CBT Platform Statement (Backlog B21(a)) — included by the "CBT Platform
+    Statement" Print Format record (module JSON); edits here are live at render
+    time. The ISSUER is the platform (CBT Platform Settings → Platform
+    Identity, rendered live so a legal-name fix propagates); the BILLED party
+    is the tenant (rendered live for the same reason); every FIGURE renders from
+    the statement's own frozen fields and nothing else. Same table-based,
+    absolute-positioned-watermark layout as the tenant billing statement, for
+    the same reason: wkhtmltopdf renders it faithfully. -#}
+{%- set platform = frappe.get_doc("CBT Platform Settings") -%}
+{%- set company = frappe.db.get_value("CBT Company", doc.company, ["registered_name", "company_name", "tin", "address"], as_dict=True) -%}
+{%- set issuer = platform.platform_legal_name or "Court Booking Tech" -%}
+{%- set paid = doc.status == "Paid" -%}
+{%- set cancelled = doc.status == "Cancelled" -%}
+{%- set month_label = frappe.utils.formatdate(doc.period ~ "-01", "MMMM yyyy") -%}
+<style>
+	.cbt-ps { position: relative; color: #1f2937; font-size: 13px; line-height: 1.45; }
+	.cbt-ps table { width: 100%; border-collapse: collapse; }
+	.cbt-ps-watermark {
+		position: absolute; top: 38%; left: 4%; z-index: 0;
+		font-size: 92px; font-weight: 800; letter-spacing: 10px;
+		color: #dc2626; opacity: 0.14;
+		-webkit-transform: rotate(-24deg); transform: rotate(-24deg);
+		white-space: nowrap;
+	}
+	.cbt-ps-content { position: relative; z-index: 1; }
+	.cbt-ps-header td { vertical-align: top; padding-bottom: 10px; }
+	.cbt-ps-issuer { font-size: 17px; font-weight: 700; }
+	.cbt-ps-muted { color: #6b7280; font-size: 12px; }
+	.cbt-ps-title {
+		text-align: center; font-size: 22px; font-weight: 800;
+		letter-spacing: 3px; padding: 8px 0 2px 0;
+	}
+	.cbt-ps-meta { margin: 10px 0 14px 0; }
+	.cbt-ps-meta td { padding: 2px 0; vertical-align: top; }
+	.cbt-ps-items th {
+		text-align: left; border-top: 2px solid #1f2937;
+		border-bottom: 1px solid #1f2937; padding: 6px 4px; font-size: 12px;
+	}
+	.cbt-ps-items td { border-bottom: 1px solid #e5e7eb; padding: 6px 4px; }
+	.cbt-ps-num { text-align: right; white-space: nowrap; }
+	.cbt-ps-total-row td {
+		border-top: 2px solid #1f2937; border-bottom: none;
+		font-weight: 800; font-size: 15px;
+	}
+	.cbt-ps-stamp {
+		display: inline-block; border: 3px solid #15803d; color: #15803d;
+		font-weight: 800; font-size: 18px; letter-spacing: 3px;
+		padding: 6px 14px; -webkit-transform: rotate(-3deg); transform: rotate(-3deg);
+	}
+	.cbt-ps-reason { margin-top: 16px; color: #b91c1c; font-weight: 700; }
+	.cbt-ps-footer {
+		margin-top: 22px; padding-top: 8px; border-top: 1px solid #e5e7eb;
+		color: #6b7280; font-size: 11px; font-style: italic;
+	}
+</style>
+<div class="cbt-ps">
+	{% if not paid %}
+	<div class="cbt-ps-watermark">{{ "CANCELLED" if cancelled else "UNPAID" }}</div>
+	{% endif %}
+	<div class="cbt-ps-content">
+		<table class="cbt-ps-header">
+			<tr>
+				<td>
+					<div class="cbt-ps-issuer">{{ issuer }}</div>
+					{% if platform.platform_tin %}<div class="cbt-ps-muted">TIN: {{ platform.platform_tin }}</div>{% endif %}
+					{% if platform.platform_address %}<div class="cbt-ps-muted">{{ platform.platform_address }}</div>{% endif %}
+				</td>
+			</tr>
+		</table>
+
+		<div class="cbt-ps-title">STATEMENT OF ACCOUNT</div>
+		<div class="cbt-ps-muted" style="text-align: center;">{{ doc.name }}</div>
+
+		<table class="cbt-ps-meta">
+			<tr>
+				<td style="width: 60%;">
+					<strong>{{ _("Billed to") }}:</strong> {{ company.registered_name or company.company_name }}
+					{% if company.tin %}<div class="cbt-ps-muted">TIN: {{ company.tin }}</div>{% endif %}
+					{% if company.address %}<div class="cbt-ps-muted">{{ company.address }}</div>{% endif %}
+				</td>
+				<td class="cbt-ps-num">
+					<div><strong>{{ _("Statement Date") }}:</strong> {{ frappe.utils.formatdate(doc.statement_date) }}</div>
+					<div><strong>{{ _("Period") }}:</strong> {{ month_label }}</div>
+				</td>
+			</tr>
+		</table>
+
+		<table class="cbt-ps-items">
+			<tr>
+				<th>{{ _("Description") }}</th>
+				<th class="cbt-ps-num">{{ _("Basis") }}</th>
+				<th class="cbt-ps-num">{{ _("Amount") }}</th>
+			</tr>
+			{% if doc.billing_mode == "Percentage" %}
+			<tr>
+				<td>{{ _("Platform commission on confirmed revenue for {0}").format(month_label) }}</td>
+				<td class="cbt-ps-num">{{ frappe.utils.fmt_money(doc.confirmed_revenue, currency="PHP") }} × {{ "%g" | format(frappe.utils.flt(doc.commission_percent)) }}%</td>
+				<td class="cbt-ps-num">{{ frappe.utils.fmt_money(doc.amount_due, currency="PHP") }}</td>
+			</tr>
+			{% elif doc.billing_mode == "Subscription" %}
+			<tr>
+				<td>{{ _("Platform subscription for {0}").format(month_label) }}</td>
+				<td class="cbt-ps-num">{{ _("Flat monthly fee") }}</td>
+				<td class="cbt-ps-num">{{ frappe.utils.fmt_money(doc.amount_due, currency="PHP") }}</td>
+			</tr>
+			{% elif doc.billing_mode == "Per Booking" %}
+			{#- Backlog B27: the pass-through. These pesos were paid by the tenant's
+			    customers as "Booking fee" lines and collected by the tenant. -#}
+			<tr>
+				<td>{{ _("Booking fees collected from customers for {0}").format(month_label) }}</td>
+				<td class="cbt-ps-num">{{ frappe.utils.cint(doc.booking_count) }} {{ _("paid booking(s) / open play entries") }}</td>
+				<td class="cbt-ps-num">{{ frappe.utils.fmt_money(doc.booking_fees, currency="PHP") }}</td>
+			</tr>
+			{% else %}
+			<tr>
+				<td>{{ _("Platform fee for {0}").format(month_label) }} ({{ doc.billing_mode or "—" }})</td>
+				<td class="cbt-ps-num"></td>
+				<td class="cbt-ps-num">{{ frappe.utils.fmt_money(doc.amount_due, currency="PHP") }}</td>
+			</tr>
+			{% endif %}
+			<tr class="cbt-ps-total-row">
+				<td colspan="2">{{ _("AMOUNT DUE") }}</td>
+				<td class="cbt-ps-num">{{ frappe.utils.fmt_money(doc.amount_due, currency="PHP") }}</td>
+			</tr>
+		</table>
+
+		{% if doc.billing_mode in ("Subscription", "Per Booking") %}
+		<div class="cbt-ps-muted" style="margin-top: 6px;">
+			{{ _("Confirmed revenue for the period, for reference") }}: {{ frappe.utils.fmt_money(doc.confirmed_revenue, currency="PHP") }}
+		</div>
+		{% endif %}
+
+		{#- The payment block follows the RECORDED payment, not the status: a
+		    statement cancelled after it was paid (the "paid against the wrong
+		    statement" undo) must still show what was received and when, or the
+		    paper that explains the mis-applied payment is the one hiding it.
+		    Only the stamp is gated on the status. -#}
+		{% if doc.paid_on %}
+		<div style="margin-top: 16px;">
+			{% if paid %}<span class="cbt-ps-stamp">PAID</span>{% endif %}
+			<div class="cbt-ps-muted" style="margin-top: 6px;">
+				{{ _("Payment received") if cancelled else _("Paid on") }} {{ frappe.utils.formatdate(doc.paid_on) }}{% if doc.payment_channel %} — {{ _("via") }} {{ frappe.db.get_value("CBT Payment Channel", doc.payment_channel, "label") or doc.payment_channel }}{% endif %}{% if doc.payment_reference %} — {{ _("Ref.") }} {{ doc.payment_reference }}{% endif %}
+			</div>
+		</div>
+		{% endif %}
+
+		{% if cancelled %}
+		<div class="cbt-ps-reason">
+			{{ _("CANCELLED") }}{% if doc.cancelled_at %} — {{ frappe.utils.format_datetime(doc.cancelled_at) }}{% endif %}{% if doc.cancel_reason %}: {{ doc.cancel_reason }}{% endif %}
+		</div>
+		{% endif %}
+
+		<div class="cbt-ps-footer">
+			{{ _("System-generated statement of account — the official invoice/receipt is issued manually by {0}").format(issuer) }}{% if not issuer.endswith(".") %}.{% endif %}
+		</div>
+	</div>
+</div>

@@ -1,0 +1,198 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-28 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "ban_section",
+  "company",
+  "customer",
+  "customer_name",
+  "ban_column",
+  "status",
+  "reason_section",
+  "reason",
+  "audit_section",
+  "banned_by",
+  "banned_at",
+  "audit_column",
+  "lifted_by",
+  "lifted_at"
+ ],
+ "fields": [
+  {
+   "description": "Bans are COMPANY-SCOPED: this customer keeps booking normally at every other facility on the platform.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ban_section",
+   "fieldtype": "Section Break",
+   "label": "Ban"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "customer.full_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ban_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "description": "Only a Company Admin (or the platform) may lift a ban — front-desk staff can raise one, but not clear it.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nLifted",
+   "permlevel": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason_section",
+   "fieldtype": "Section Break",
+   "label": "Reason"
+  },
+  {
+   "description": "Why this customer was banned (e.g. repeated no-show reservations that were never paid). Retained for audit even after the ban is lifted.",
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "audit_section",
+   "fieldtype": "Section Break",
+   "label": "Audit"
+  },
+  {
+   "fieldname": "banned_by",
+   "fieldtype": "Link",
+   "label": "Banned By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "banned_at",
+   "fieldtype": "Datetime",
+   "label": "Banned At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "audit_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lifted_by",
+   "fieldtype": "Link",
+   "label": "Lifted By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lifted_at",
+   "fieldtype": "Datetime",
+   "label": "Lifted At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Customer Ban",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Platform Admin",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "customer_name,company,status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer_name"
+}

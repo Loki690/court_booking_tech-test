@@ -1,0 +1,969 @@
+/* Shared portal styling (section-9). Mobile-first: every layout starts as a
+ * single column and only widens at >=720px.
+ *
+ * SECTION-23 (Backlog B14, "FaceLift"): colours no longer come from frappe's
+ * theme variables — they come from cbt_theme.css's --cbt-* tokens, which the
+ * shared head loads immediately before this file. Structure, spacing and every
+ * selector are unchanged; 102 E2E rows select on this DOM.
+ *
+ * Rules this file lives under, each one learned from a test that would
+ * otherwise have caught it late:
+ *   - NO `text-transform` on anything holding asserted text. Chromium applies
+ *     it to innerText, which is what Playwright's inner_text() reads, so an
+ *     uppercased badge silently breaks an exact-match assertion.
+ *   - NO new `position: sticky|fixed`. #cbt-checkoutbar is already sticky and
+ *     stays exactly as it was; a sticky topbar would intercept clicks on the
+ *     content scrolling under it.
+ *     ONE exception, taken deliberately in Backlog B33: the matrix's time
+ *     column (.cbt-timecell). It is what makes a sideways-scrolling grid
+ *     readable, and the interception the rule guards against is defused rather
+ *     than hoped away — it sits at z-index 2 (under the checkout bar's 5), it
+ *     is horizontal only, and every cell carries a scroll-margin-left wider
+ *     than the column, so no scroll-into-view can park a slot underneath it.
+ *     An E2E row scrolls the wrapper fully right and clicks the leftmost
+ *     court's cell, which is the failure this rule exists to prevent.
+ *   - NO `transform` / `filter` / `will-change` anywhere. Each creates a
+ *     containing block, which moves elementFromPoint and breaks leaflet's tile
+ *     positioning.
+ *   - `.cbt-modal` keeps `display:flex` with NO [hidden] guard of its own: it
+ *     stays hidden only because the base stylesheet's
+ *     `[hidden]{display:none!important}` outranks it, and four modals now
+ *     depend on that (section-22 hand-off; the QR lightbox joined 2026-09-03).
+ */
+
+/* The page itself, not just the cards on it. This stylesheet is loaded ONLY by
+   the CBT portal pages, so a bare `body` rule here cannot reach the desk or
+   another app's website page. */
+body { background: var(--cbt-surface); }
+
+.cbt-wrap { max-width: 960px; margin: 0 auto; padding: 0 1rem 3rem; }
+.cbt-wrap--narrow { max-width: 640px; }
+
+/* ---- top bar ---------------------------------------------------------- */
+/* Deliberately NOT sticky — see the header. */
+.cbt-topbar {
+	display: flex; align-items: center; gap: .75rem;
+	padding: 1.1rem 0 1rem; flex-wrap: wrap;
+	border-bottom: 2px solid var(--cbt-primary-soft); margin-bottom: 1.1rem;
+}
+.cbt-topbar h1 {
+	font-size: 1.5rem; margin: 0; flex: 1; min-width: 0;
+	color: var(--cbt-ink); letter-spacing: -.015em; font-weight: 650;
+}
+.cbt-topbar .cbt-navlinks { display: flex; gap: .4rem; flex-wrap: wrap; }
+.cbt-navlink {
+	font-size: .85rem; padding: .38rem .8rem; border-radius: var(--cbt-radius-pill);
+	border: 1px solid var(--cbt-line); text-decoration: none;
+	color: var(--cbt-ink); white-space: nowrap; background: var(--cbt-card);
+	transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.cbt-navlink:hover {
+	background: var(--cbt-primary-soft); border-color: var(--cbt-primary-line);
+	color: var(--cbt-primary-600); text-decoration: none;
+}
+.cbt-navlink--primary {
+	background: var(--cbt-primary); border-color: var(--cbt-primary);
+	color: #fff;
+}
+.cbt-navlink--primary:hover {
+	background: var(--cbt-primary-600); border-color: var(--cbt-primary-600);
+	color: #fff;
+}
+
+/* ---- buttons ----------------------------------------------------------
+   Frappe's own .btn-primary is the site's near-black; on a green page it reads
+   as a foreign control. Scoped to the two containers the portal owns —
+   .cbt-wrap for page content and .cbt-modal for the four overlays, which are
+   SIBLINGS of the wrap, not children of it. signup/my-profile do not load this
+   file and carry the same rules in their own <style> blocks. */
+.cbt-wrap .btn-primary, .cbt-modal .btn-primary {
+	background: var(--cbt-primary); border-color: var(--cbt-primary); color: #fff;
+}
+.cbt-wrap .btn-primary:hover, .cbt-modal .btn-primary:hover,
+.cbt-wrap .btn-primary:focus, .cbt-modal .btn-primary:focus {
+	background: var(--cbt-primary-600); border-color: var(--cbt-primary-600); color: #fff;
+}
+.cbt-wrap .btn-primary:focus-visible, .cbt-modal .btn-primary:focus-visible {
+	box-shadow: var(--cbt-focus-ring);
+}
+.cbt-wrap .btn-default:hover, .cbt-modal .btn-default:hover {
+	border-color: var(--cbt-primary-line); color: var(--cbt-primary-600);
+}
+
+/* ---- cards ------------------------------------------------------------ */
+.cbt-card {
+	background: var(--cbt-card); border: 1px solid var(--cbt-line);
+	border-radius: var(--cbt-radius); padding: 1rem 1.1rem; margin-bottom: .85rem;
+	box-shadow: var(--cbt-shadow);
+}
+a.cbt-card { display: block; color: inherit; text-decoration: none; }
+/* Border + shadow only. A `transform` lift here would create a containing
+   block over the whole list and change what elementFromPoint returns. */
+a.cbt-card:hover {
+	border-color: var(--cbt-primary-line); box-shadow: var(--cbt-shadow-lift);
+	text-decoration: none;
+}
+.cbt-card-head { display: flex; gap: .8rem; align-items: flex-start; }
+.cbt-card-title { font-weight: 600; font-size: 1.05rem; margin: 0; color: var(--cbt-ink); }
+.cbt-card-sub { color: var(--cbt-ink-muted); font-size: .87rem; margin: .12rem 0 0; }
+.cbt-muted { color: var(--cbt-ink-muted); }
+.cbt-small { font-size: .85rem; }
+/* The version footer (templates/includes/cbt_portal_foot.html). */
+.cbt-version { margin: 2rem 0 0; text-align: center; font-size: .75rem; }
+
+/* Section-23: a booking's status, readable before you read a word of it.
+   A ::before rather than a border-left or an inset shadow, for two reasons —
+   a real border would shift the card's content 3px out of line with the
+   .cbt-moved-pair strip beneath it, and an inset shadow would have to be
+   restated in every :hover rule (the lift shares the box-shadow property, so
+   hovering would silently repaint the stripe).
+   Only /my-bookings cards carry data-status; the /book court cards key on
+   data-court and the marketplace cards on data-slug, so this reaches neither.
+   `position: relative` is a containing block, NOT a transform — it does not
+   move elementFromPoint, and the strip that test_13 clicks is a SIBLING of
+   this card, outside anything ::before can cover. */
+.cbt-card[data-status] { position: relative; overflow: hidden; }
+.cbt-card[data-status]::before {
+	content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+	background: var(--cbt-past-ink);
+}
+.cbt-card[data-status="Reserved"]::before { background: var(--cbt-accent); }
+.cbt-card[data-status="Confirmed"]::before,
+.cbt-card[data-status="Extended"]::before { background: var(--cbt-primary); }
+.cbt-card[data-status="No Show"]::before { background: var(--cbt-noshow-ink); }
+
+/* ---- store credit (Backlog B44) ----------------------------------------
+   Deliberately NOT a .cbt-card: a fourth identical card would disappear into
+   the stack it sits above, and this is the one line on the page telling the
+   customer they are owed money. A slimmer shape, an amber rule and the amber
+   ground instead — the same family Reserved already uses for "money pending".
+   Amber NEVER carries text (cbt_theme.css contrast note): the ink is
+   --cbt-accent-ink at 5.29:1 on --cbt-accent-soft. */
+.cbt-credit {
+	display: flex; align-items: baseline; flex-wrap: wrap; gap: .1rem .5rem;
+	margin-bottom: .6rem; padding: .7rem .9rem .7rem 1.1rem;
+	position: relative; overflow: hidden;
+	background: var(--cbt-accent-soft); color: var(--cbt-accent-ink);
+	border: 1px solid var(--cbt-accent-soft); border-radius: var(--cbt-radius-sm);
+}
+.cbt-credit::before {
+	content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+	background: var(--cbt-accent);
+}
+.cbt-credit-amount {
+	font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.cbt-credit-where { font-size: .95rem; font-weight: 600; }
+.cbt-credit-hint { flex: 1 1 100%; font-size: .85rem; opacity: .85; }
+
+/* ---- moved booking (section-19) --------------------------------------- */
+/* The "Moved to …" strip is a SIBLING of the card, not a child: the card is an
+   <a> and a nested anchor is invalid HTML. These two rules move the card's own
+   bottom margin onto the wrapper — without that the strip floats .85rem below
+   its own card and visually joins the NEXT one. */
+.cbt-moved-pair { margin-bottom: .85rem; }
+.cbt-moved-pair > .cbt-card {
+	margin-bottom: 0;
+	border-radius: var(--cbt-radius) var(--cbt-radius) 0 0;
+}
+.cbt-moved-link {
+	display: block; font-size: .85rem; padding: .55rem 1.1rem;
+	background: var(--cbt-moved-bg);
+	border: 1px solid var(--cbt-line); border-top: 0;
+	border-radius: 0 0 var(--cbt-radius) var(--cbt-radius);
+	color: var(--cbt-moved-ink); text-decoration: none;
+}
+.cbt-moved-link:hover {
+	color: var(--cbt-primary-600); border-color: var(--cbt-primary-line);
+	text-decoration: none;
+}
+.cbt-note--moved { background: var(--cbt-moved-bg); border-color: var(--cbt-moved-line); }
+
+/* ---- logo ------------------------------------------------------------- */
+/* Section-23: 42 -> 48px. On a list whose whole job is to make a customer
+   want to go somewhere, the facility's mark is not a favicon. */
+.cbt-logo {
+	width: 48px; height: 48px; border-radius: 10px; object-fit: contain;
+	background: var(--cbt-card); flex: none;
+	border: 1px solid var(--cbt-line);
+}
+.cbt-logo-fallback {
+	width: 48px; height: 48px; border-radius: 10px; flex: none;
+	background: var(--cbt-primary-soft); color: var(--cbt-primary-600);
+	display: flex; align-items: center; justify-content: center;
+	font-weight: 700; font-size: 1.2rem;
+	border: 1px solid var(--cbt-primary-line);
+}
+
+/* ---- banner + gallery + floor-plan sketch (section-22) ---------------- */
+/* The hero bleeds to the card's edges, so the card loses its own padding and
+   the head puts it back — otherwise the image sits in a 1.1rem frame and
+   reads as a thumbnail rather than a photograph of the place. */
+.cbt-card--hero { padding: 0; overflow: hidden; }
+.cbt-card--hero > .cbt-card-head { padding: .9rem 1.1rem 1rem; }
+/* Same box and same fit as .cbt-card-photo below, deliberately: /book's hero
+   and the marketplace card render the SAME CBT Company.banner field, and a
+   tenant who uploads once should not have to guess which of two crops they are
+   designing for. See that rule for why it is contain-on-16:5 and not a
+   fixed-height cover.
+   The fixed 150/230px heights are gone rather than kept with `contain` — a
+   contain inside a fixed height letterboxes every existing hero instead of
+   fixing one. */
+.cbt-banner {
+	display: block; width: 100%; height: auto; max-height: 300px;
+	object-fit: contain; background: var(--cbt-card);
+}
+
+/* Section-23: the marketplace card's photograph. Same <img> contract as
+   .cbt-banner (a real element with a real src — the pending-panel thumb taught
+   us a background-image is not assertable).
+
+   CONTAIN on a 16:5 box, not COVER on a fixed height. The DocType tells the
+   tenant to upload "roughly 1600x400" (cbt_company.json), and a 1383x400
+   upload into a 92/120px cover crop is a 7.7:1 sliver of the middle of their
+   banner — the wordmark they paid a designer for arrives beheaded. The box now
+   carries the shape they were asked for, and contain guarantees that whatever
+   they uploaded is what they see; the soft ground fills the sliver of
+   letterboxing an off-ratio upload leaves. */
+.cbt-card--photo { padding: 0; overflow: hidden; }
+.cbt-card--photo > .cbt-card-head { padding: .9rem 1.1rem 1rem; }
+.cbt-card-photo {
+	display: block; width: 100%; height: auto; max-height: 300px;
+	object-fit: contain; background: var(--cbt-card);
+}
+
+/* The marketplace card is a <div> since the social chips landed on it (a real
+   <a> inside an <a> is invalid HTML — see .cbt-moved-link above). Three rules
+   put back what the tag-qualified `a.cbt-card` selectors used to give it.
+
+   `position: relative` keys on [data-slug], NOT on --photo: --photo is only
+   added when the company uploaded a banner, so a banner-less card would leave
+   .cbt-card-link::after resolving against the initial containing block — one
+   invisible viewport-sized click-eater per card, over the search box and the
+   whole list. [data-slug] is exactly the marketplace card. */
+/* The marketplace card's head is a STACK, not the logo-left/text-right flex row
+   the other cards use: brand strip, branch, address, then one row each for the
+   numbers, the status+sports, and the links. Scoped to [data-slug] so
+   /my-bookings, /book and the branch modal keep the shared row layout. */
+.cbt-card[data-slug] > .cbt-card-head { display: block; }
+.cbt-card-brand {
+	display: flex; align-items: center; gap: .8rem; margin-bottom: .55rem;
+}
+/* Beside its own mark and weighted BELOW the branch: two cards of the same
+   company differ by the branch, so that is what the eye should land on. */
+.cbt-card-company {
+	font-size: .92rem; font-weight: 600; color: var(--cbt-ink-muted);
+	min-width: 0; line-height: 1.2;
+}
+/* Three chip rows in a row would otherwise inherit .cbt-chips' .55rem each and
+   drift apart into three unrelated bands. */
+.cbt-card[data-slug] .cbt-chips + .cbt-chips { margin-top: .3rem; }
+
+.cbt-card[data-slug] { position: relative; }
+.cbt-card[data-slug]:hover {
+	border-color: var(--cbt-primary-line); box-shadow: var(--cbt-shadow-lift);
+}
+/* display:block because .cbt-card-title was a <p>: as an inline anchor it
+   would fragment across lines and lose the block geometry .cbt-card-sub sits
+   under. */
+a.cbt-card-link { display: block; color: inherit; text-decoration: none; }
+a.cbt-card-link:hover, a.cbt-card-link:focus-visible {
+	color: inherit; text-decoration: none;
+}
+a.cbt-card-link:focus-visible { box-shadow: var(--cbt-focus-ring); border-radius: 4px; }
+/* The stretched link: the whole card is one click target, and the card still
+   holds a real href for middle-click and open-in-new-tab. */
+a.cbt-card-link::after { content: ""; position: absolute; inset: 0; }
+
+/* The company's own pages, after the sport chips. Icon-only pills, and they
+   MUST sit above the stretched overlay or they are unclickable. */
+a.cbt-social-link {
+	position: relative; z-index: 1;
+	display: inline-flex; align-items: center; padding: .22rem .45rem;
+	cursor: pointer; text-decoration: none;
+	color: var(--cbt-primary-600); background: var(--cbt-card);
+	border-color: var(--cbt-primary-line);
+}
+a.cbt-social-link:hover, a.cbt-social-link:focus-visible {
+	border-color: var(--cbt-primary); background: var(--cbt-primary-soft);
+	color: var(--cbt-primary-600); text-decoration: none;
+}
+a.cbt-social-link svg { display: block; }
+/* The modal's row retires itself when the company set no links. An author
+   display:flex outranks the UA [hidden] rule — say it, as .cbt-more does. */
+.cbt-social-row[hidden] { display: none; }
+
+/* Details left, banner right. The banner used to run full-width across the top
+   with the text under it, which left the whole right half of that text row
+   empty on a desktop. 940px and not the usual 720 is load-bearing: at 720 the
+   details column is ~105px, and once the head's 1.1rem padding is out that is
+   a column of single letters, not a layout.
+
+   25/75, not the 20/80 first tried: at 20% the column gives ~150px of content,
+   and the "Open now" badge plus one sport chip measure ~150px together — they
+   tied, so the sport wrapped to its own line. 25% gives ~196px, which clears a
+   longer sport name ("Multi-purpose") too. The ratio is doing real work here;
+   do not round it back down without re-measuring that row.
+
+   grid-column/grid-row rather than `order`: both are correct today, but a
+   third child added to card() later cannot silently reshuffle an explicit
+   placement. The head is the taller item, so it sets the row height and the
+   photo centres beside it on the card's own background. */
+@media (min-width: 940px) {
+	.cbt-card--photo {
+		display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+		align-items: center;
+	}
+	.cbt-card--photo > .cbt-card-head { grid-column: 1; grid-row: 1; }
+	.cbt-card--photo > .cbt-card-photo { grid-column: 2; grid-row: 1; }
+}
+
+.cbt-photos-btn { flex: none; align-self: center; white-space: nowrap; }
+
+/* Backlog B24: the "See more of <company>" strip under the card head — the
+   Photos button and the company's own website / Facebook / Instagram chips,
+   as ONE row (the user ruled they combine). Absent entirely when the company
+   has neither. Inside the hero card the head carries its own padding, so the
+   strip restates it as margins; in a plain card the card's padding does. */
+.cbt-more {
+	display: flex; flex-wrap: wrap; gap: .4rem; align-items: center;
+	margin-top: .75rem; padding-top: .7rem; border-top: 1px solid var(--cbt-line);
+}
+.cbt-card--hero > .cbt-more { margin: 0 1.1rem 1rem; }
+/* The client retires the strip with `hidden` when the branch has no photos
+   and there are no links. An author `display:flex` outranks the UA's [hidden]
+   rule, so say it here rather than lean on the base reset's !important. */
+.cbt-more[hidden] { display: none; }
+.cbt-more-title { margin-right: .15rem; }
+/* An <a> chip, not a <button>: it is a real link with a real href, so
+   middle-click, "open in new tab" and a hover URL all behave. Same pill as the
+   filter chips; the arrow glyph in the label says "this leaves the page". */
+a.cbt-link {
+	text-decoration: none; cursor: pointer; font-weight: 500;
+	color: var(--cbt-primary-600); background: var(--cbt-card);
+	border-color: var(--cbt-primary-line);
+}
+a.cbt-link:hover, a.cbt-link:focus-visible {
+	border-color: var(--cbt-primary); background: var(--cbt-primary-soft);
+	color: var(--cbt-primary-600); text-decoration: none;
+}
+
+/* Wider than the checkout sheet: a gallery of 140px thumbnails in a 520px
+   column is two per row on a desktop that has room for four. */
+.cbt-modal-body--wide { max-width: 760px; }
+.cbt-gallery {
+	display: grid; gap: .6rem; margin-top: .8rem;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.cbt-gallery-item {
+	margin: 0; border: 1px solid var(--cbt-line);
+	border-radius: var(--cbt-radius-sm); overflow: hidden; background: var(--cbt-card);
+}
+.cbt-gallery-item img {
+	display: block; width: 100%; height: 118px; object-fit: cover;
+	background: var(--cbt-primary-soft);
+}
+.cbt-gallery-item figcaption { padding: .35rem .5rem; }
+
+/* The sketch is a MAP, not a toolbar. Three things make it read as a floor
+   plan rather than a row of wide buttons: it is CAPPED in width (a plan that
+   spans the page competes with the grid it indexes), every cell holds the same
+   court-ish aspect ratio so the arrangement is legible at a glance, and the
+   whole thing sits inside a bordered "building". Gaps keep the dashed-and-faded
+   language the desk board's .cbt-floor-gap already uses, so staff and customers
+   are looking at one drawing of one venue.
+   Section-23: the hand-picked #f2f8f4 / #cfe0d4 pair section-22 chose "to read
+   as court" is now literally the court-green token pair it was approximating. */
+.cbt-sketch {
+	margin: 0 0 .9rem; max-width: 420px;
+	border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius);
+	padding: .7rem .75rem .75rem; background: var(--cbt-card);
+	box-shadow: var(--cbt-shadow);
+}
+/* Backlog B32: the sketch is a <details> that ships closed, so the summary is
+   the one line a returning customer sees. Marker drawn by hand: the UA's
+   triangle sits on the baseline and differs per engine. */
+.cbt-sketch > summary.cbt-sketch-title {
+	cursor: pointer; list-style: none; display: flex; align-items: center; gap: .45rem;
+	margin: 0; padding: .1rem 0; font-size: .87rem; font-weight: 600; color: var(--cbt-ink);
+}
+.cbt-sketch > summary::-webkit-details-marker { display: none; }
+.cbt-sketch > summary::before {
+	content: ""; width: .5rem; height: .5rem; flex: none; margin-left: .15rem;
+	border-right: 2px solid var(--cbt-primary-600); border-bottom: 2px solid var(--cbt-primary-600);
+	transform: rotate(-45deg); transition: transform .15s ease;
+}
+.cbt-sketch[open] > summary::before { transform: rotate(45deg); }
+.cbt-sketch-count { font-weight: 400; color: var(--cbt-ink-muted); }
+.cbt-sketch-hint { margin: .45rem 0 .5rem; }
+.cbt-sketch-grid { display: grid; gap: .3rem; }
+/* min-width:0 is load-bearing on any grid child holding text — the default
+   min-content floor would let a long court name push the columns apart and
+   break the plan's proportions. */
+.cbt-sketch-court, .cbt-sketch-gap { min-width: 0; aspect-ratio: 8 / 5; }
+.cbt-sketch-court {
+	display: flex; align-items: center; justify-content: center;
+	padding: .2rem .3rem; font-size: .72rem; line-height: 1.15; text-align: center;
+	border: 1px solid var(--cbt-primary-line); border-radius: 7px;
+	background: var(--cbt-primary-soft); color: var(--cbt-primary-600);
+	cursor: pointer; font-weight: 500;
+	overflow: hidden; word-break: break-word;
+}
+.cbt-sketch-court:hover { border-color: var(--cbt-primary); }
+.cbt-sketch-court[aria-pressed="true"] {
+	background: var(--cbt-primary); border-color: var(--cbt-primary);
+	color: #fff;
+}
+.cbt-sketch-gap {
+	border: 1px dashed var(--cbt-line); border-radius: 7px;
+	background: repeating-linear-gradient(
+		45deg, transparent, transparent 5px,
+		rgba(15, 40, 30, .04) 5px, rgba(15, 40, 30, .04) 10px
+	);
+}
+
+/* ---- chips & badges --------------------------------------------------- */
+.cbt-chips { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .55rem; align-items: center; }
+.cbt-chip {
+	font-size: .74rem; padding: .2rem .55rem; border-radius: var(--cbt-radius-pill);
+	background: var(--cbt-surface); color: var(--cbt-ink-muted);
+	border: 1px solid var(--cbt-line); cursor: default;
+}
+button.cbt-chip { cursor: pointer; }
+button.cbt-chip:hover { border-color: var(--cbt-primary-line); color: var(--cbt-primary-600); }
+/* One selector, three surfaces — the marketplace sport filters, the /book date
+   strip's siblings and section-22's gallery group/court chips all press
+   through here. That is the intent, not an accident (section-22 hand-off). */
+button.cbt-chip[aria-pressed="true"] {
+	background: var(--cbt-primary); border-color: var(--cbt-primary); color: #fff;
+}
+.cbt-badge {
+	font-size: .72rem; font-weight: 600; padding: .22rem .6rem;
+	border-radius: var(--cbt-radius-pill);
+	letter-spacing: .02em; white-space: nowrap;
+}
+.cbt-badge--reserved { background: var(--cbt-reserved-bg); color: var(--cbt-reserved-ink); }
+.cbt-badge--confirmed { background: var(--cbt-confirmed-bg); color: var(--cbt-confirmed-ink); }
+.cbt-badge--extended { background: var(--cbt-extended-bg); color: var(--cbt-extended-ink); }
+.cbt-badge--completed { background: var(--cbt-past-bg); color: var(--cbt-completed-ink); }
+.cbt-badge--dead { background: var(--cbt-past-bg); color: var(--cbt-dead-ink); }
+/* Section-16. Deliberately NOT --dead: a no-show is not the same event as a
+   cancellation or an expiry, the customer was charged for it, and a grey badge
+   that reads "nothing happened" is how that turns into a support call. */
+.cbt-badge--noshow { background: var(--cbt-noshow-bg); color: var(--cbt-noshow-ink); }
+/* Section-19. A moved booking's cancelled half is NOT --dead either: the
+   customer did not cancel it, the facility moved it, and a grey "Cancelled"
+   badge is precisely what makes that read as a mistake. Quiet, not alarming —
+   the replacement is live and nothing is wrong. */
+.cbt-badge--moved { background: var(--cbt-moved-bg); color: var(--cbt-moved-ink); }
+.cbt-badge--open { background: var(--cbt-confirmed-bg); color: var(--cbt-confirmed-ink); }
+/* Backlog B48: `Opens 6 AM` on the past-grey pair (existing tokens, so
+   test_19's THEME_TOKENS is untouched); the hours line shares the row with
+   the badge and the sports, in the muted small size. */
+.cbt-badge--closed { background: var(--cbt-past-bg); color: var(--cbt-past-ink); }
+.cbt-hours { font-size: .85rem; color: var(--cbt-ink-muted); }
+.cbt-distance { font-size: .8rem; font-weight: 700; color: var(--cbt-primary); }
+
+/* ---- countdown -------------------------------------------------------- */
+.cbt-countdown { font-variant-numeric: tabular-nums; font-weight: 600; }
+.cbt-countdown-urgent { color: var(--cbt-blocked-ink); }
+.cbt-countdown-done { color: var(--cbt-ink-muted); font-weight: 400; }
+
+/* ---- messages --------------------------------------------------------- */
+.cbt-error, .cbt-ok, .cbt-note {
+	border-radius: var(--cbt-radius-sm); padding: .7rem .9rem; margin: .75rem 0;
+	font-size: .9rem;
+}
+.cbt-error { background: var(--cbt-blocked-bg); border: 1px solid var(--cbt-blocked-line); color: var(--cbt-blocked-ink); }
+.cbt-ok { background: var(--cbt-confirmed-bg); border: 1px solid var(--cbt-primary-line); color: var(--cbt-confirmed-ink); }
+.cbt-note { background: var(--cbt-surface); border: 1px solid var(--cbt-line); }
+.cbt-empty {
+	text-align: center; padding: 2.75rem 1rem; color: var(--cbt-ink-muted);
+	background: var(--cbt-card); border: 1px dashed var(--cbt-line);
+	border-radius: var(--cbt-radius);
+}
+.cbt-empty a { color: var(--cbt-primary-600); font-weight: 600; }
+
+/* ---- search / filters ------------------------------------------------- */
+.cbt-search { width: 100%; margin-bottom: .6rem; }
+.cbt-search:focus { border-color: var(--cbt-primary-line); box-shadow: var(--cbt-focus-ring); }
+
+/* ---- availability grid ------------------------------------------------
+   Backlog B33 replaced the per-court cards (.cbt-courts > .cbt-card >
+   .cbt-slotgrid) with the time × court matrix below. The SLOT rules survive
+   the change untouched: a cell is the same button it always was, which is why
+   the E2E suite's .cbt-slot[data-court][data-start] selectors did too. */
+.cbt-slot {
+	border: 1px solid var(--cbt-line); background: var(--cbt-card);
+	border-radius: var(--cbt-radius-sm); padding: .45rem .2rem; font-size: .78rem;
+	text-align: center; cursor: pointer; line-height: 1.25; color: var(--cbt-ink);
+	transition: border-color .12s ease, background .12s ease;
+}
+.cbt-slot:hover:not(:disabled) {
+	border-color: var(--cbt-primary); background: var(--cbt-primary-soft);
+	color: var(--cbt-primary-600);
+}
+.cbt-slot[aria-pressed="true"] {
+	background: var(--cbt-primary); border-color: var(--cbt-primary); color: #fff;
+}
+.cbt-slot--booked { background: var(--cbt-reserved-bg); color: var(--cbt-reserved-ink); cursor: not-allowed; }
+.cbt-slot--blocked { background: var(--cbt-blocked-bg); color: var(--cbt-blocked-ink); cursor: not-allowed; }
+.cbt-slot--past { background: var(--cbt-past-bg); color: var(--cbt-past-ink); cursor: not-allowed; }
+.cbt-slot small { display: block; font-size: .66rem; opacity: .85; }
+/* Section-14: the per-slot price, shown only where a rate rule makes it differ
+   from the court's headline rate. Weighted rather than muted — it is a fact the
+   customer must not meet for the first time at checkout. */
+.cbt-slot-rate { font-weight: 700; opacity: 1; color: var(--cbt-accent-ink); }
+.cbt-slot[aria-pressed="true"] .cbt-slot-rate { color: inherit; }
+.cbt-slot:hover:not(:disabled) .cbt-slot-rate { color: var(--cbt-accent-ink); }
+
+/* ---- the time × court matrix (Backlog B33) -----------------------------
+   Time down the first column, one column per court, every cell carrying its
+   amount and its status word. The table scrolls INSIDE this wrapper and never
+   moves the page — B31's mobile lane measures page-level overflow on two
+   engines — which is what min-width:0 here and max-content on the table are
+   for: a scroll container that cannot shrink pushes the page sideways instead
+   of scrolling, and a table that shrink-fits would starve the cells of the
+   width their 44px tap floor needs. */
+.cbt-matrix-wrap {
+	overflow-x: auto; min-width: 0; margin-bottom: .85rem;
+	background: var(--cbt-card); border: 1px solid var(--cbt-line);
+	border-radius: var(--cbt-radius); box-shadow: var(--cbt-shadow);
+}
+.cbt-matrix {
+	width: max-content; min-width: 100%;
+	border-collapse: separate; border-spacing: 0;
+}
+.cbt-matrix th, .cbt-matrix td { padding: .2rem; vertical-align: middle; }
+.cbt-matrix thead th { vertical-align: bottom; padding: .7rem .35rem .5rem; }
+.cbt-matrix tbody tr + tr th, .cbt-matrix tbody tr + tr td {
+	border-top: 1px solid var(--cbt-line);
+}
+/* The one deliberate exception to this file's no-new-sticky rule — the header
+   comment carries the reasoning and the three things that defuse it. */
+/* The RANGE, on one line. It fits because the label drops a :00 — "6 AM –
+   7 AM", not "6:00 AM – 7:00 AM" — which is what makes a start-and-end column
+   affordable on a phone at all. A branch on half-hour slots prints
+   "6:30 AM – 7 AM" and the column simply grows; nowrap keeps that predictable
+   rather than letting one row wrap and shift its neighbours. */
+.cbt-timecell {
+	position: sticky; left: 0; z-index: 2;
+	min-width: 6rem; text-align: right; white-space: nowrap;
+	padding-right: .55rem; font-size: .78rem; font-weight: 500;
+	color: var(--cbt-ink-muted); background: var(--cbt-card);
+	border-right: 1px solid var(--cbt-line);
+}
+.cbt-matrix-corner { color: var(--cbt-ink); font-weight: 600; }
+/* A cell scrolled hard against the left edge would sit UNDER the sticky time
+   column, where a thumb — and Playwright's click — lands on the column
+   instead. scroll-margin keeps every scroll-into-view clear of it. */
+.cbt-matrix td, .cbt-matrix .cbt-slot { scroll-margin-left: 8rem; }
+
+.cbt-colhead { min-width: 5.5rem; text-align: left; }
+.cbt-colhead-name { font-size: .92rem; }
+.cbt-matrix .cbt-slot { width: 100%; min-width: 5.5rem; }
+/* Section-14 stamped a price only where it differed from the court's headline
+   rate; B33's ruling is that every cell states its amount. The signal that
+   density rule protected does not disappear — it moves to --up, so an hour
+   that costs MORE than the headline is still the one that stands out. */
+.cbt-matrix .cbt-slot-rate {
+	display: block; font-size: .8rem; font-weight: 600;
+	color: var(--cbt-ink); opacity: 1;
+}
+.cbt-matrix .cbt-slot-rate--up { font-weight: 700; color: var(--cbt-accent-ink); }
+.cbt-matrix .cbt-slot:hover:not(:disabled) .cbt-slot-rate { color: var(--cbt-primary-600); }
+.cbt-matrix .cbt-slot:hover:not(:disabled) .cbt-slot-rate--up { color: var(--cbt-accent-ink); }
+.cbt-matrix .cbt-slot[aria-pressed="true"] .cbt-slot-rate { color: inherit; }
+.cbt-slot-state, .cbt-slot-hold { font-variant-numeric: tabular-nums; }
+/* Where a sketch tap lands: a whole column, not a card. */
+.cbt-col--focus { background: var(--cbt-primary-soft); }
+th.cbt-col--focus { box-shadow: inset 0 -2px 0 var(--cbt-primary); }
+
+/* ---- date strip ------------------------------------------------------- */
+/* One week visible, paged by the arrows up to the company's advance-booking
+   horizon; the date field jumps anywhere inside it. min-width:0 on the strip
+   is load-bearing — a flex child with overflow-x defaults to min-content and
+   would push the arrows off a phone screen. */
+.cbt-daterow { display: flex; align-items: flex-start; gap: .4rem; flex-wrap: wrap; margin-bottom: .9rem; }
+.cbt-datestrip { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .4rem; margin-bottom: .9rem; }
+/* B31 (2026-09-04): the strip is its OWN full-width row, and the arrows + date
+   field are a second row UNDER it — in DOM order, not via `order`, so Tab
+   follows the eye. The earlier one-row shape (‹ strip › field, strip at
+   `flex: 1 1 0`) left the strip whatever ~150px the arrows and the field did
+   not take: ONE visible chip on a 390px phone, and not even the pressed one.
+   A 100% basis breaks the row deliberately; the strip still scrolls inside it
+   and paintDates() keeps the pressed chip in view. */
+.cbt-daterow .cbt-datestrip { flex: 1 1 100%; min-width: 0; margin-bottom: 0; }
+.cbt-datenav-row { display: flex; gap: .4rem; align-items: stretch; flex: 1 1 100%; }
+.cbt-datenav {
+	flex: none; align-self: stretch; min-width: 2rem; padding: .4rem .5rem;
+	border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius-sm);
+	background: var(--cbt-card); cursor: pointer; font-size: 1.1rem;
+	line-height: 1; color: var(--cbt-ink-muted);
+}
+.cbt-datenav:hover:not(:disabled) { border-color: var(--cbt-primary); color: var(--cbt-primary); }
+.cbt-datenav:disabled { opacity: .35; cursor: not-allowed; }
+.cbt-datejump {
+	flex: none; padding: .4rem .5rem; font-size: .78rem;
+	border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius-sm);
+	background: var(--cbt-card); color: var(--cbt-ink);
+}
+#cbt-date-note { margin: -.5rem 0 .9rem; }
+.cbt-date {
+	flex: none; min-width: 58px; text-align: center; padding: .45rem .35rem;
+	border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius-sm);
+	background: var(--cbt-card); cursor: pointer; font-size: .78rem;
+	color: var(--cbt-ink-muted);
+}
+.cbt-date:hover { border-color: var(--cbt-primary-line); color: var(--cbt-primary-600); }
+.cbt-date[aria-pressed="true"] {
+	background: var(--cbt-primary); border-color: var(--cbt-primary); color: #fff;
+}
+/* The day number stays inside this <strong> — test_05 reads it through
+   querySelector('strong'). */
+.cbt-date strong { display: block; font-size: 1.05rem; color: inherit; }
+
+/* ---- checkout bar + modal --------------------------------------------- */
+/* Already sticky since section-9; NOT changed to fixed. */
+.cbt-checkoutbar {
+	position: sticky; bottom: 0; z-index: 5; margin-top: 1rem;
+	background: var(--cbt-card); border: 1px solid var(--cbt-primary-line);
+	border-radius: var(--cbt-radius); padding: .8rem .95rem; display: flex; gap: .75rem;
+	align-items: center; box-shadow: var(--cbt-shadow-bar);
+}
+.cbt-checkoutbar .cbt-total {
+	font-weight: 700; font-size: 1.15rem; color: var(--cbt-primary-600);
+	font-variant-numeric: tabular-nums;
+}
+.cbt-modal {
+	position: fixed; inset: 0; background: rgba(15, 40, 30, .5); z-index: 1050;
+	display: flex; align-items: flex-end; justify-content: center; padding: 0;
+}
+@media (min-width: 720px) { .cbt-modal { align-items: center; padding: 1rem; } }
+.cbt-modal-body {
+	background: var(--cbt-card); border-radius: 16px 16px 0 0; padding: 1.25rem;
+	width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto;
+	box-shadow: var(--cbt-shadow-lift);
+}
+@media (min-width: 720px) { .cbt-modal-body { border-radius: var(--cbt-radius); } }
+.cbt-lines { width: 100%; font-size: .9rem; }
+.cbt-lines td { padding: .3rem 0; vertical-align: top; }
+.cbt-lines td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.cbt-lines tr.cbt-line-total td {
+	font-weight: 700; font-size: 1.05rem; padding-top: .6rem;
+	border-top: 1px solid var(--cbt-line); color: var(--cbt-primary-600);
+}
+.cbt-instructions { white-space: pre-wrap; font-size: .87rem; }
+
+/* ---- payment channels (Backlog B29) ------------------------------------
+   One card per way to pay — GCash, a bank — with the account details the
+   customer needs. At checkout they are radio cards (pick one); on the booking
+   page and the confirmation the chosen one renders static. */
+.cbt-channels { display: grid; gap: .5rem; margin: .5rem 0 .6rem; }
+.cbt-channel {
+	display: flex; align-items: flex-start; gap: .55rem; margin: 0;
+	padding: .55rem .65rem; border: 1px solid var(--cbt-line);
+	border-radius: var(--cbt-radius-sm); background: var(--cbt-card);
+	cursor: pointer; font-size: .87rem; font-weight: 400;
+}
+.cbt-channel:has(input:checked) { border-color: var(--cbt-primary); background: var(--cbt-primary-soft); }
+.cbt-channel input { margin: .2rem 0 0; flex: none; }
+.cbt-channel--static { cursor: default; }
+.cbt-channel-body { display: flex; flex-direction: column; gap: .1rem; min-width: 0; flex: 1; }
+.cbt-channel-label { font-weight: 700; }
+.cbt-channel-meta { color: var(--cbt-ink-muted); font-variant-numeric: tabular-nums; word-break: break-word; }
+.cbt-channel-note { color: var(--cbt-ink-muted); font-size: .8rem; white-space: pre-wrap; }
+/* The QR is the thing a customer actually scans, so it is a TILE, not an icon:
+   96px on a phone, 120px from 720px up. B50: the WRAP (tile + hint words) is
+   the tap target, a span with role=button — not a <button>, which would be a
+   second labelable element inside the checkout's <label>. The tap still picks
+   that channel's radio through the label — you enlarge what you pay through. */
+.cbt-channel-qr-wrap {
+	display: flex; flex-direction: column; align-items: center; gap: .25rem;
+	flex: none; max-width: 120px;
+}
+.cbt-channel-qr-wrap[data-qr-zoom] { cursor: pointer; }
+.cbt-channel-qr-wrap[data-qr-zoom]:focus-visible { outline: none; }
+.cbt-channel-qr-wrap[data-qr-zoom]:hover .cbt-channel-qr,
+.cbt-channel-qr-wrap[data-qr-zoom]:focus-visible .cbt-channel-qr {
+	border-color: var(--cbt-primary-line);
+}
+.cbt-channel-qr-wrap[data-qr-zoom]:focus-visible .cbt-channel-qr { box-shadow: var(--cbt-focus-ring); }
+.cbt-channel-qr {
+	width: 96px; height: 96px; object-fit: contain; flex: none;
+	padding: 4px; background: var(--cbt-card);
+	border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius-sm);
+	cursor: pointer; transition: border-color .12s ease;
+}
+.cbt-channel-qr-hint { text-align: center; line-height: 1.2; }
+@media (min-width: 720px) { .cbt-channel-qr { width: 120px; height: 120px; } }
+
+/* The QR lightbox: the gallery's shell (same .cbt-modal contract), one per
+   page, appended to <body> by cbt_portal.js on first use. Capped narrower than
+   the checkout sheet — a QR wider than a phone screen is not more scannable. */
+.cbt-modal-body--qr { max-width: 440px; text-align: center; }
+.cbt-modal-body--qr .cbt-card-head { text-align: left; }
+.cbt-qr-large {
+	display: block; width: 100%; max-width: 360px; height: auto;
+	margin: .6rem auto 0; padding: 8px; background: var(--cbt-card);
+	border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius-sm);
+}
+.cbt-qr-meta { margin: .7rem 0 0; user-select: text; }
+.cbt-qr-note { margin: .35rem 0 0; }
+
+/* ---- proof drop zone -------------------------------------------------- */
+.cbt-drop {
+	border: 2px dashed var(--cbt-line); border-radius: var(--cbt-radius);
+	padding: 1.5rem 1rem; text-align: center; cursor: pointer;
+	color: var(--cbt-ink-muted); background: var(--cbt-surface);
+}
+.cbt-drop:hover { border-color: var(--cbt-primary-line); }
+.cbt-drop.cbt-drop--over { border-color: var(--cbt-primary); background: var(--cbt-primary-soft); }
+.cbt-proofs { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); margin-top: .8rem; }
+.cbt-proof { border: 1px solid var(--cbt-line); border-radius: var(--cbt-radius-sm); overflow: hidden; }
+.cbt-proof img { width: 100%; height: 110px; object-fit: cover; display: block; }
+.cbt-proof-meta { padding: .35rem .5rem; font-size: .74rem; }
+.cbt-proof[data-status="Accepted"] { border-color: var(--cbt-primary-line); }
+.cbt-proof[data-status="Rejected"] { border-color: var(--cbt-blocked-line); }
+
+/* ---- maps ------------------------------------------------------------- */
+.cbt-mapembed { width: 100%; height: 220px; border: 0; border-radius: var(--cbt-radius-sm); }
+.cbt-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+
+/* Backlog B37: /book's "Where to find us" row in the head card — the address
+   and the Directions link always visible, the map folded under the address.
+   The link is a SIBLING of the <details>, never inside its <summary>: an <a>
+   inside a summary both navigates and toggles. */
+.cbt-where {
+	display: flex; flex-wrap: wrap; align-items: flex-start; gap: .4rem .8rem;
+	margin-top: .6rem;
+}
+.cbt-card--hero > .cbt-where { margin: 0 1.1rem .2rem; }
+.cbt-where > .cbt-where-address { margin: 0; }
+.cbt-where-details { flex: 1 1 240px; min-width: 0; }
+.cbt-where-details > summary {
+	cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline;
+	gap: .15rem .45rem; padding: .1rem 0; font-size: .87rem; color: var(--cbt-ink-muted);
+}
+.cbt-where-details > summary::-webkit-details-marker { display: none; }
+.cbt-where-label { font-weight: 600; color: var(--cbt-primary-600); white-space: nowrap; }
+.cbt-where-label::after {
+	content: "›"; display: inline-block; margin-left: .3rem;
+	transition: transform .15s ease;
+}
+.cbt-where-details[open] .cbt-where-label::after { transform: rotate(90deg); }
+.cbt-where-details[open] > summary { margin-bottom: .5rem; }
+.cbt-where-details > .cbt-mapembed { height: 240px; }
+.cbt-where-directions { flex: none; }
+.cbt-skeleton {
+	height: 84px; border-radius: var(--cbt-radius); margin-bottom: .85rem;
+	background: linear-gradient(90deg, var(--cbt-primary-soft) 25%, rgba(15, 40, 30, .04) 37%, var(--cbt-primary-soft) 63%);
+	background-size: 400% 100%; animation: cbt-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes cbt-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+/* ---- phones (Backlog B31, 2026-09-04) ----------------------------------
+   Measured by e2e/tests/test_mobile_portal.py on WebKit and Blink. Two arms on
+   purpose: a LAYOUT change is width-bound (a touch monitor at 1920px keeps the
+   desktop layout); TAP SIZES follow the input, not the width (a phone held
+   sideways is still a thumb). `hover: none` keeps hybrid laptops on the
+   desktop sizes. */
+@media (max-width: 720px) {
+	/* The heading and the nav chips shared one row and the heading gave way:
+	   "Find / a / court" on three lines, "QC Smash" clipped under the chips. */
+	.cbt-topbar h1 { flex: 1 1 100%; }
+}
+@media (max-width: 720px), ((hover: none) and (pointer: coarse)) {
+	/* 44px: the smallest target a thumb hits reliably (Apple HIG). */
+	.cbt-chip, .cbt-slot, .cbt-date, .cbt-navlink, .cbt-datenav, .cbt-datejump {
+		min-height: 44px;
+	}
+	.cbt-chip, .cbt-navlink { display: inline-flex; align-items: center; }
+	.cbt-slot { display: flex; flex-direction: column; justify-content: center; }
+	.cbt-datenav { min-width: 44px; }
+	.cbt-modal .btn-sm { min-width: 44px; min-height: 44px; font-size: 1.25rem; line-height: 1; }
+	.cbt-modal .btn-block, .cbt-checkoutbar .btn { min-height: 44px; }
+	.cbt-badge { font-size: .8125rem; }
+	/* B32/B37: the two disclosures and the Directions link are thumb targets. */
+	.cbt-sketch > summary, .cbt-where-details > summary { min-height: 44px; align-items: center; }
+	.cbt-where-directions { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* Wordmark + legal pages. The brand string is what Google's consent screen is
+   compared against, so it must not drift. */
+.cbt-titlegroup { display: flex; flex-direction: column; gap: .125rem; min-width: 0; }
+/* NO text-transform: the reviewer compares what they SEE against the console's
+   App name, and uppercase would render BOOKPICKLEBALL against BookPickleBall. */
+.cbt-brand {
+	font-size: .8125rem;
+	font-weight: 700;
+	letter-spacing: .01em;
+	color: var(--cbt-primary, #0f5132);
+	text-decoration: none;
+}
+.cbt-brand:hover, .cbt-brand:focus { color: var(--cbt-primary, #2563eb); text-decoration: none; }
+.cbt-legal-links { margin: .25rem 0 0; }
+.cbt-legal-links a { color: inherit; text-decoration: underline; }
+.cbt-legal-page { max-width: 46rem; margin: 0 auto; padding: .5rem 0 2.5rem; line-height: 1.65; }
+.cbt-legal-page h1 { margin-bottom: .25rem; }
+.cbt-legal-page h2 { margin-top: 1.75rem; font-size: 1.15rem; }
+.cbt-legal-page h3 { margin-top: 1.1rem; font-size: 1rem; }
+.cbt-legal-page ul { padding-left: 1.25rem; }
+.cbt-legal-page li { margin-bottom: .35rem; }
+.cbt-legal-updated { color: var(--cbt-muted, #6b7280); }
+.cbt-legal-foot { margin-top: 2.5rem; }
+
+/* B52: the marketplace's one paid banner. Labelled, capped in height so it can
+   never push the search results off a phone, and never taller than it is wide. */
+.cbt-ad {
+	display: block;
+	position: relative;
+	margin: 0 0 .75rem;
+	border-radius: .5rem;
+	overflow: hidden;
+	line-height: 0;
+	text-decoration: none;
+}
+.cbt-ad:hover, .cbt-ad:focus { text-decoration: none; }
+.cbt-ad-img { display: block; width: 100%; max-height: 9rem; object-fit: cover; }
+.cbt-ad-tag {
+	position: absolute;
+	top: .375rem;
+	right: .375rem;
+	padding: .125rem .375rem;
+	border-radius: .25rem;
+	background: rgba(17, 24, 39, .72);
+	color: #fff;
+	font-size: .6875rem;
+	line-height: 1.4;
+	letter-spacing: .02em;
+}
+@media (max-width: 480px) {
+	.cbt-ad-img { max-height: 6.5rem; }
+}
+
+/* The picture is the door to the gallery. It must sit ABOVE the card title's
+   stretched ::after, or that link swallows the tap. */
+.cbt-card-photo-btn {
+	position: relative;
+	z-index: 2;
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+}
+.cbt-card-photo-btn:focus-visible {
+	outline: 3px solid var(--cbt-primary, #2563eb);
+	outline-offset: 2px;
+}
+.cbt-card-photo-btn:hover .cbt-card-photo { filter: brightness(1.05); }
+.cbt-photo-pill {
+	position: absolute;
+	right: .5rem;
+	bottom: .5rem;
+	display: inline-flex;
+	align-items: center;
+	gap: .3rem;
+	min-height: 2rem;
+	padding: .3rem .7rem;
+	border-radius: 999px;
+	background: rgba(17, 24, 39, .72);
+	color: #fff;
+	font-size: .75rem;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+/* The chooser row: picture on top, the link over the words below it. */
+.cbt-chooser-card { padding: 0; overflow: hidden; }
+.cbt-chooser-link {
+	display: block;
+	padding: .75rem;
+	color: inherit;
+	text-decoration: none;
+}
+.cbt-chooser-link:hover, .cbt-chooser-link:focus { text-decoration: none; }
+
+.cbt-photo-viewer {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	background: rgba(0, 0, 0, .93);
+}
+.cbt-photo-viewer[hidden] { display: none; }
+.cbt-gallery-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .75rem;
+	padding: .75rem 1rem;
+	color: #fff;
+	font-size: .9rem;
+}
+.cbt-gallery-stage {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: .5rem;
+	min-height: 0;
+	padding: 0 .75rem;
+}
+.cbt-gallery-stage img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+.cbt-gallery-nav {
+	flex: 0 0 auto;
+	width: 2.75rem;
+	height: 2.75rem;
+	border: 0;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, .16);
+	color: #fff;
+	font-size: 1.35rem;
+	line-height: 1;
+	cursor: pointer;
+}
+.cbt-gallery-nav:disabled { opacity: .3; cursor: default; }
+.cbt-gallery-caption {
+	min-height: 1.5rem;
+	padding: .5rem 1rem;
+	color: #e5e7eb;
+	font-size: .85rem;
+	text-align: center;
+}
+.cbt-gallery-strip {
+	display: flex;
+	gap: .5rem;
+	overflow-x: auto;
+	padding: .5rem 1rem 1rem;
+}
+.cbt-gallery-thumb {
+	flex: 0 0 auto;
+	width: 4.5rem;
+	height: 3.375rem;
+	padding: 0;
+	border: 2px solid transparent;
+	border-radius: .25rem;
+	background: none;
+	opacity: .5;
+	cursor: pointer;
+}
+.cbt-gallery-thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: .125rem;
+}
+.cbt-gallery-thumb[aria-current="true"] { opacity: 1; border-color: #fff; }
+@media (max-width: 480px) {
+	.cbt-gallery-nav { width: 2.75rem; height: 2.75rem; }
+	.cbt-gallery-thumb { width: 3.5rem; height: 2.625rem; }
+}

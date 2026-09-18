@@ -1,0 +1,195 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-05 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "credit_section",
+  "company",
+  "customer",
+  "customer_name",
+  "credit_column",
+  "status",
+  "amount",
+  "balance",
+  "source_section",
+  "source_booking",
+  "source_invoice",
+  "source_column",
+  "reason",
+  "issued_by",
+  "issued_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "credit_section",
+   "fieldtype": "Section Break",
+   "label": "Credit"
+  },
+  {
+   "description": "Store credit is COMPANY-SCOPED: it is spendable only at the facility that issued it.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Always an ACCOUNT. A walk-in has nothing to attach a credit to and is refunded in cash.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "User",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "customer.full_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "credit_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "description": "Spent when the balance reaches zero. Void is a platform correction.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nSpent\nVoid",
+   "read_only": 1
+  },
+  {
+   "description": "What was issued, in pesos — the refunded booking's own total.",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "options": "PHP",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "What is left to spend. Drained by bookings, restored when one of those bookings is cancelled or expires.",
+   "fieldname": "balance",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Balance",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_section",
+   "fieldtype": "Section Break",
+   "label": "Where it came from"
+  },
+  {
+   "fieldname": "source_booking",
+   "fieldtype": "Link",
+   "label": "Source Booking",
+   "options": "CBT Court Booking",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_invoice",
+   "fieldtype": "Link",
+   "label": "Source Invoice",
+   "options": "CBT Booking Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The refund reason the Company Admin gave — the same sentence the ledger line carries.",
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_at",
+   "fieldtype": "Datetime",
+   "label": "Issued At",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Court Booking",
+   "link_fieldname": "credit_document"
+  }
+ ],
+ "modified": "2026-09-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Customer Credit",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin"
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "customer,status,balance",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer_name"
+}

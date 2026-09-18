@@ -1,0 +1,548 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:slug",
+ "creation": "2026-07-22 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "identity_section",
+  "company_name",
+  "registered_name",
+  "logo",
+  "identity_column",
+  "slug",
+  "company_code",
+  "banner",
+  "links_section",
+  "website",
+  "facebook_url",
+  "links_column",
+  "instagram_url",
+  "billing_doc_section",
+  "tin",
+  "address",
+  "billing_doc_column",
+  "vat_registration",
+  "vat_percent",
+  "billing_doc_title",
+  "checkout_section",
+  "payment_instructions",
+  "refund_policy",
+  "facility_fault_cancel_by",
+  "booking_window_section",
+  "advance_booking_days",
+  "max_cart_items",
+  "no_show_section",
+  "no_show_release_minutes",
+  "verification_section",
+  "office_hours",
+  "verification_column",
+  "reservation_expiry_minutes",
+  "verification_hold_hours",
+  "platform_section",
+  "status",
+  "allow_self_branch_management",
+  "allow_company_gallery_management",
+  "platform_column",
+  "billing_mode",
+  "subscription_fee",
+  "commission_percent",
+  "booking_fee_tiers",
+  "open_play_fee_per_participant",
+  "onboarding_tab",
+  "onboarding_checklist_html",
+  "branches_tab",
+  "branches_html",
+  "media_tab",
+  "media_html",
+  "photos"
+ ],
+ "fields": [
+  {
+   "fieldname": "identity_section",
+   "fieldtype": "Section Break",
+   "label": "Identity"
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Name",
+   "reqd": 1
+  },
+  {
+   "description": "Legal name printed on the billing document.",
+   "fieldname": "registered_name",
+   "fieldtype": "Data",
+   "label": "Registered Name",
+   "reqd": 1
+  },
+  {
+   "description": "Shown beside your name on the booking page and printed on the billing document.",
+   "fieldname": "logo",
+   "fieldtype": "Attach Image",
+   "label": "Logo"
+  },
+  {
+   "fieldname": "identity_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "URL key used in printed deep links (?c=<slug>). Renaming is Platform-Admin-only and breaks published URLs.",
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "label": "Slug",
+   "permlevel": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "2–6 uppercase letters/digits. Immutable after first save — feeds the BK-/INV- numbering series. Derived from the slug when left blank.",
+   "fieldname": "company_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Code",
+   "permlevel": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "Wide header image across the top of your booking page (/book). A landscape shot of the venue works best — roughly 1600×400.",
+   "fieldname": "banner",
+   "fieldtype": "Attach Image",
+   "label": "Banner"
+  },
+  {
+   "description": "Shown to customers on your booking page (/book), in the same strip as the Photos button, and opened in a new tab. Links only: keep your own pages updated and customers see them there — nothing is copied or synced here. Leave a field empty and no chip is drawn for it.",
+   "fieldname": "links_section",
+   "fieldtype": "Section Break",
+   "label": "Website & Social Links"
+  },
+  {
+   "description": "Full address starting with https:// (or http://), e.g. https://www.ayalacourts.ph",
+   "fieldname": "website",
+   "fieldtype": "Data",
+   "label": "Website"
+  },
+  {
+   "description": "Your Facebook page, e.g. https://www.facebook.com/ayalacourts — must be on facebook.com, fb.com or fb.me",
+   "fieldname": "facebook_url",
+   "fieldtype": "Data",
+   "label": "Facebook Page"
+  },
+  {
+   "fieldname": "links_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Your Instagram profile, e.g. https://www.instagram.com/ayalacourts — must be on instagram.com or instagr.am",
+   "fieldname": "instagram_url",
+   "fieldtype": "Data",
+   "label": "Instagram"
+  },
+  {
+   "fieldname": "billing_doc_section",
+   "fieldtype": "Section Break",
+   "label": "Billing Document Identity"
+  },
+  {
+   "fieldname": "tin",
+   "fieldtype": "Data",
+   "label": "TIN"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "billing_doc_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "NON-VAT",
+   "fieldname": "vat_registration",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "VAT Registration",
+   "options": "VAT\nNON-VAT",
+   "reqd": 1
+  },
+  {
+   "default": "12",
+   "depends_on": "eval:doc.vat_registration==\"VAT\"",
+   "description": "Billing-document amounts are VAT-INCLUSIVE at this rate.",
+   "fieldname": "vat_percent",
+   "fieldtype": "Percent",
+   "label": "VAT (%)"
+  },
+  {
+   "default": "BILLING STATEMENT",
+   "description": "Title printed on the billing document (EOPT-aware default).",
+   "fieldname": "billing_doc_title",
+   "fieldtype": "Data",
+   "label": "Billing Document Title"
+  },
+  {
+   "fieldname": "checkout_section",
+   "fieldtype": "Section Break",
+   "label": "Checkout"
+  },
+  {
+   "description": "Bank / GCash details shown to the customer at checkout for Fund Transfer payments.",
+   "fieldname": "payment_instructions",
+   "fieldtype": "Small Text",
+   "label": "Payment Instructions"
+  },
+  {
+   "default": "Refund",
+   "description": "THIS facility's own policy, set by the platform (you can read it; ask us to change it). Refund: a paid booking may be cancelled and the money returned. Reschedule only: the desk moves it to another time, or issues store credit — a facility-fault cancellation may still return cash. Printed for the customer at checkout and on their booking.",
+   "fieldname": "refund_policy",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Refund Policy",
+   "options": "Refund\nReschedule only",
+   "permlevel": 1
+  },
+  {
+   "default": "Company Admin only",
+   "description": "Who may record a cancellation as THIS facility's own fault — which returns cash whatever the Refund Policy above says. Set per facility by the platform (you can read it; ask us to change it), and it applies under both refund policies.",
+   "fieldname": "facility_fault_cancel_by",
+   "fieldtype": "Select",
+   "label": "Facility-Fault Cancellation By",
+   "options": "Company Admin only\nStaff and above",
+   "permlevel": 1
+  },
+  {
+   "description": "How far ahead this company's customers may reserve online.",
+   "fieldname": "booking_window_section",
+   "fieldtype": "Section Break",
+   "label": "Booking Window"
+  },
+  {
+   "default": "0",
+   "description": "Customers may book today + this many days, inclusive (the portal date strip stops there too). 0 = platform default. Staff booking at the desk is never limited by this.",
+   "fieldname": "advance_booking_days",
+   "fieldtype": "Int",
+   "label": "Advance Booking (Days)",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "description": "How many separate bookings one customer may put in a single cart checkout. 0 = platform default. The platform's own figure is a CEILING — asking for more than it gives you the platform's number, not yours.",
+   "fieldname": "max_cart_items",
+   "fieldtype": "Int",
+   "label": "Max Bookings per Cart",
+   "non_negative": 1
+  },
+  {
+   "description": "Free a paid slot nobody turned up for, so the desk can resell it.",
+   "fieldname": "no_show_section",
+   "fieldtype": "Section Break",
+   "label": "No-show Release"
+  },
+  {
+   "default": "0",
+   "description": "0 = no automatic release (the default — nothing changes for you). Set a number of minutes and a Confirmed booking nobody has checked in for is released back to the board that many minutes after it was due to start, free for a walk-in. The payment is NOT refunded: the statement stays Paid & Verified, and a release made in error can be undone from the board.",
+   "fieldname": "no_show_release_minutes",
+   "fieldtype": "Int",
+   "label": "No-show Release (Minutes)",
+   "non_negative": 1
+  },
+  {
+   "description": "Verification-clock configuration — when finance verifies fund transfers.",
+   "fieldname": "verification_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Verification"
+  },
+  {
+   "description": "When finance actually verifies transfers (company-level: one finance function, one bank account). Drives the proof verification deadline.",
+   "fieldname": "office_hours",
+   "fieldtype": "Table",
+   "label": "Office Hours",
+   "options": "CBT Business Hours"
+  },
+  {
+   "fieldname": "verification_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Minutes before an unpaid reservation expires. 0 = platform default.",
+   "fieldname": "reservation_expiry_minutes",
+   "fieldtype": "Int",
+   "label": "Reservation Expiry (Minutes)"
+  },
+  {
+   "default": "0",
+   "description": "Cumulative OFFICE-HOURS time staff get to review a payment proof. 0 = platform default.",
+   "fieldname": "verification_hold_hours",
+   "fieldtype": "Int",
+   "label": "Verification Hold (Office Hours)"
+  },
+  {
+   "description": "Platform-Admin-only levers.",
+   "fieldname": "platform_section",
+   "fieldtype": "Section Break",
+   "label": "Platform"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nSuspended",
+   "permlevel": 1,
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "When on, this company's admins manage their own branches. Off = Platform Admin adds branches.",
+   "fieldname": "allow_self_branch_management",
+   "fieldtype": "Check",
+   "label": "Allow Self Branch Management",
+   "permlevel": 1
+  },
+  {
+   "default": "1",
+   "description": "When on, this company's admins add, reorder and remove the photos on the company and on its branches. Off = the platform manages them. Staff can always look at photos; they never edit.",
+   "fieldname": "allow_company_gallery_management",
+   "fieldtype": "Check",
+   "label": "Allow Company Admin to Modify Gallery Content",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "platform_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Subscription and Percentage are absorbed by the company — the customer never sees them. Per Booking is an ADD-ON the customer pays on top of the court, printed as its own \"Booking fee\" line, which the company collects and remits on its monthly statement.",
+   "fieldname": "billing_mode",
+   "fieldtype": "Select",
+   "label": "Billing Mode",
+   "options": "\nSubscription\nPercentage\nPer Booking",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "eval:doc.billing_mode==\"Subscription\"",
+   "fieldname": "subscription_fee",
+   "fieldtype": "Currency",
+   "label": "Subscription Fee",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "eval:doc.billing_mode==\"Percentage\"",
+   "fieldname": "commission_percent",
+   "fieldtype": "Percent",
+   "label": "Commission (%)",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "eval:doc.billing_mode==\"Per Booking\"",
+   "description": "Marginal brackets on a MONTHLY count of paid bookings (an extension counts as its own booking; a reschedule keeps its fee). Contiguous from 1; leave the last tier's To blank. The fee is fixed when the booking is made and printed on the customer's statement.",
+   "fieldname": "booking_fee_tiers",
+   "fieldtype": "Table",
+   "label": "Booking Fee Tiers",
+   "options": "CBT Booking Fee Tier",
+   "permlevel": 1
+  },
+  {
+   "depends_on": "eval:doc.billing_mode==\"Per Booking\"",
+   "description": "Charged to EACH paying open play participant on top of the session fee. Open play sessions never enter the booking count above. 0 = no open play fee.",
+   "fieldname": "open_play_fee_per_participant",
+   "fieldtype": "Currency",
+   "label": "Open Play Fee (per participant)",
+   "non_negative": 1,
+   "options": "PHP",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "onboarding_tab",
+   "fieldtype": "Tab Break",
+   "label": "Onboarding"
+  },
+  {
+   "description": "Live go-live status, derived from the data — nothing here is a checkbox someone ticked.",
+   "fieldname": "onboarding_checklist_html",
+   "fieldtype": "HTML",
+   "label": "Go-live Checklist"
+  },
+  {
+   "fieldname": "branches_tab",
+   "fieldtype": "Tab Break",
+   "label": "Branches"
+  },
+  {
+   "description": "This company's branches — read and edit them here without leaving the company. Each branch's own form still exists; Open takes you there.",
+   "fieldname": "branches_html",
+   "fieldtype": "HTML",
+   "label": "Branches"
+  },
+  {
+   "fieldname": "media_tab",
+   "fieldtype": "Tab Break",
+   "label": "Media"
+  },
+  {
+   "fieldname": "media_html",
+   "fieldtype": "HTML",
+   "label": "Photos"
+  },
+  {
+   "fieldname": "photos",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Photos",
+   "options": "CBT Media Item"
+  }
+ ],
+ "image_field": "logo",
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Facilities",
+   "link_doctype": "CBT Branch",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Facilities",
+   "link_doctype": "CBT Court",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Court Booking",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Slot Block",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Booking Invoice",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Bookings",
+   "link_doctype": "CBT Payment Proof",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Open Play",
+   "link_doctype": "CBT Open Play Session",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Members",
+   "link_doctype": "CBT Membership",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Members",
+   "link_doctype": "CBT Customer Ban",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Members",
+   "link_doctype": "CBT Customer Credit",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Tenants",
+   "link_doctype": "CBT Company User",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Tenants",
+   "link_doctype": "CBT Payment Channel",
+   "link_fieldname": "company"
+  },
+  {
+   "group": "Platform",
+   "link_doctype": "CBT Platform Statement",
+   "link_fieldname": "company"
+  }
+ ],
+ "make_attachments_public": 1,
+ "modified": "2026-09-11 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Company",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Platform Admin",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Company Admin"
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "company_name,company_code",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "company_name"
+}

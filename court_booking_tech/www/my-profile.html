@@ -1,0 +1,218 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("My Profile") }}{% endblock %}
+
+{% block page_content %}
+{# Section-23: like signup.html this page keeps its own narrow shell and skips
+   cbt_portal_head.html, so it links the token layer directly. #}
+<link rel="stylesheet" href="{{ cbt_asset_url('/assets/court_booking_tech/css/cbt_theme.css') }}">
+<link rel="stylesheet" href="/assets/court_booking_tech/vendor/leaflet/leaflet.css">
+
+<div class="cbt-profile-wrap">
+	<div class="cbt-card">
+		<h1 class="cbt-title">{{ _("My Profile") }}</h1>
+		<p class="cbt-subtitle">{{ full_name }} · {{ user_email }}</p>
+
+		<div class="form-group">
+			<label class="cbt-label" for="cbt-phone">{{ _("Phone") }}</label>
+			<input type="tel" id="cbt-phone" class="form-control" autocomplete="tel"
+				placeholder="0917-000-0000" value="{{ profile.phone }}">
+		</div>
+		<div class="form-group">
+			<label class="cbt-label" for="cbt-address">{{ _("Address") }}</label>
+			<textarea id="cbt-address" class="form-control" rows="2"
+				placeholder="{{ _('Barangay / city is enough') }}">{{ profile.address_text }}</textarea>
+			<small class="cbt-hint">{{ _("Vague is fine — only your map pin is used for distance.") }}</small>
+		</div>
+
+		<label class="cbt-label">{{ _("Home location") }}</label>
+		<p class="cbt-hint cbt-map-hint">
+			{{ _("Tap the map (or drag the pin) to set your home spot. Branches are sorted nearest to it.") }}
+		</p>
+		<div id="cbt-profile-map" class="cbt-map"></div>
+		<div class="cbt-coords">
+			<button type="button" class="btn btn-sm cbt-btn-locate" id="cbt-geolocate">
+				{{ _("Use my location") }}
+			</button>
+			<span class="cbt-coords-read">
+				<input type="text" id="cbt-lat" class="form-control cbt-coord" readonly
+					placeholder="{{ _('latitude') }}" value="{{ profile.home_latitude if has_pin else '' }}">
+				<input type="text" id="cbt-lng" class="form-control cbt-coord" readonly
+					placeholder="{{ _('longitude') }}" value="{{ profile.home_longitude if has_pin else '' }}">
+			</span>
+		</div>
+
+		<div class="cbt-error" id="cbt-profile-error" hidden></div>
+		<div class="cbt-saved" id="cbt-profile-status" hidden>{{ _("Saved") }}</div>
+
+		<button type="button" class="btn btn-primary cbt-btn-submit" id="cbt-profile-save">
+			{{ _("Save profile") }}
+		</button>
+	</div>
+
+	{# Section-11: the customer's memberships, across every facility they play
+	   at. Read-only — memberships are the FACILITY's commercial decision, so
+	   this page shows the perk and never offers to edit it. #}
+	{% if memberships %}
+	<div class="cbt-card" id="cbt-memberships" data-testid="memberships">
+		<h2 class="cbt-section-title">{{ _("My memberships") }}</h2>
+		{% for row in memberships %}
+			<div class="cbt-membership" data-state="{{ row.state }}"
+				data-testid="membership-row">
+				<div style="flex:1; min-width:0">
+					<div class="cbt-membership-co">{{ row.company_name }}</div>
+					<div class="cbt-membership-sub">
+						{{ row.tier }} · {{ "%g" | format(row.discount_percent) }}%
+						{{ _("off") }}
+						{% if row.end_date %}
+							· {{ _("until") }} {{ frappe.format(row.end_date, {"fieldtype": "Date"}) }}
+						{% endif %}
+					</div>
+				</div>
+				<span class="cbt-membership-state cbt-membership-state--{{ row.state | lower }}">
+					{{ _(row.state) }}
+				</span>
+			</div>
+		{% endfor %}
+	</div>
+	{% endif %}
+</div>
+
+<style>
+	body { background: var(--cbt-surface); }
+	.cbt-profile-wrap { max-width: 520px; margin: 2rem auto 3rem; padding: 0 1rem; }
+	.cbt-card { background: var(--cbt-card); border: 1px solid var(--cbt-line);
+		border-radius: var(--cbt-radius); padding: 1.75rem 1.5rem;
+		box-shadow: var(--cbt-shadow); }
+	.cbt-title { font-size: 1.4rem; margin: 0 0 .25rem; color: var(--cbt-ink);
+		letter-spacing: -.015em; font-weight: 650; }
+	.cbt-subtitle { color: var(--cbt-ink-muted); margin-bottom: 1.25rem; }
+	.cbt-label { font-weight: 500; color: var(--cbt-ink); }
+	.cbt-hint { color: var(--cbt-ink-muted); display: block; }
+	.cbt-map-hint { margin: 0 0 .5rem; font-size: .85rem; }
+	/* 300px tall and ~470px wide inside this 520px shell. Do not shrink it:
+	   test_04 clicks the map at the absolute offset (220, 140) to drop a pin. */
+	.cbt-map { height: 300px; border-radius: var(--cbt-radius-sm);
+		border: 1px solid var(--cbt-line); }
+	.cbt-coords { display: flex; gap: .5rem; align-items: center; margin-top: .5rem;
+		flex-wrap: wrap; }
+	.cbt-coords-read { display: flex; gap: .5rem; flex: 1; min-width: 0; }
+	.cbt-coord { flex: 1; min-width: 0; font-size: .85rem; background: var(--cbt-surface); }
+	.cbt-btn-locate { border: 1px solid var(--cbt-line); }
+	.cbt-btn-locate:hover { border-color: var(--cbt-primary-line);
+		color: var(--cbt-primary-600); }
+	.cbt-btn-submit { width: 100%; margin-top: 1rem; }
+	.cbt-profile-wrap .btn-primary { background: var(--cbt-primary);
+		border-color: var(--cbt-primary); color: #fff; }
+	.cbt-profile-wrap .btn-primary:hover, .cbt-profile-wrap .btn-primary:focus {
+		background: var(--cbt-primary-600); border-color: var(--cbt-primary-600);
+		color: #fff; }
+	.cbt-error { background: var(--cbt-blocked-bg); border: 1px solid var(--cbt-blocked-line);
+		color: var(--cbt-blocked-ink);
+		border-radius: var(--cbt-radius-sm); padding: .6rem .8rem; margin-top: .75rem;
+		font-size: .9rem; }
+	.cbt-saved { background: var(--cbt-confirmed-bg); border: 1px solid var(--cbt-primary-line);
+		color: var(--cbt-confirmed-ink);
+		border-radius: var(--cbt-radius-sm); padding: .6rem .8rem; margin-top: .75rem;
+		font-size: .9rem; }
+	/* Memberships (section-11) */
+	#cbt-memberships { margin-top: 1.25rem; }
+	.cbt-section-title { font-size: 1.08rem; margin: 0 0 .75rem; color: var(--cbt-ink); }
+	.cbt-membership { display: flex; align-items: center; gap: .75rem;
+		padding: .65rem 0; border-top: 1px solid var(--cbt-line); }
+	.cbt-membership:first-of-type { border-top: 0; }
+	.cbt-membership-co { font-weight: 600; color: var(--cbt-ink); }
+	.cbt-membership-sub { color: var(--cbt-ink-muted); font-size: .85rem; }
+	.cbt-membership-state { font-size: .75rem; font-weight: 600; padding: .18rem .55rem;
+		border-radius: var(--cbt-radius-pill); white-space: nowrap; }
+	.cbt-membership-state--active { background: var(--cbt-confirmed-bg); color: var(--cbt-confirmed-ink); }
+	.cbt-membership-state--expired { background: var(--cbt-past-bg); color: var(--cbt-ink-muted); }
+	.cbt-membership-state--future { background: var(--cbt-extended-bg); color: var(--cbt-extended-ink); }
+</style>
+
+<script src="/assets/court_booking_tech/vendor/leaflet/leaflet.js"></script>
+<script src="{{ cbt_asset_url('/assets/court_booking_tech/js/cbt_portal.js') }}"></script>
+<script>
+	(function () {
+		"use strict";
+		var METRO_MANILA = [14.58, 121.0];
+		var savedPin = {{ [profile.home_latitude, profile.home_longitude] | tojson if has_pin else "null" }};
+
+		L.Icon.Default.imagePath = "/assets/court_booking_tech/vendor/leaflet/images/";
+		var map = L.map(document.getElementById("cbt-profile-map"));
+		L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+			maxZoom: 19,
+			attribution: "&copy; OpenStreetMap contributors",
+		}).addTo(map);
+
+		var marker = null;
+		function setPin(lat, lng) {
+			lat = Math.round(lat * 1e6) / 1e6;
+			lng = Math.round(lng * 1e6) / 1e6;
+			if (marker) {
+				marker.setLatLng([lat, lng]);
+			} else {
+				marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+				marker.on("dragend", function () {
+					var pos = marker.getLatLng();
+					setPin(pos.lat, pos.lng);
+				});
+			}
+			document.getElementById("cbt-lat").value = lat;
+			document.getElementById("cbt-lng").value = lng;
+		}
+
+		if (savedPin) {
+			map.setView(savedPin, 15);
+			setPin(savedPin[0], savedPin[1]);
+		} else {
+			map.setView(METRO_MANILA, 11);
+		}
+
+		map.on("click", function (event) {
+			setPin(event.latlng.lat, event.latlng.lng);
+		});
+
+		document.getElementById("cbt-geolocate").addEventListener("click", function () {
+			if (!navigator.geolocation) return;
+			navigator.geolocation.getCurrentPosition(function (pos) {
+				map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+				setPin(pos.coords.latitude, pos.coords.longitude);
+			});
+		});
+
+		var saveBtn = document.getElementById("cbt-profile-save");
+		var errorBox = document.getElementById("cbt-profile-error");
+		var statusBox = document.getElementById("cbt-profile-status");
+
+		saveBtn.addEventListener("click", function () {
+			errorBox.hidden = true;
+			statusBox.hidden = true;
+			saveBtn.disabled = true;
+
+			var args = {
+				phone: document.getElementById("cbt-phone").value,
+				address_text: document.getElementById("cbt-address").value,
+			};
+			var lat = document.getElementById("cbt-lat").value;
+			var lng = document.getElementById("cbt-lng").value;
+			if (lat && lng) {
+				args.home_latitude = lat;
+				args.home_longitude = lng;
+			}
+
+			cbtFetch("court_booking_tech.api.profile.update_my_profile", args)
+				.then(function () {
+					statusBox.hidden = false;
+				})
+				.catch(function (err) {
+					errorBox.textContent = err.message;
+					errorBox.hidden = false;
+				})
+				.finally(function () {
+					saveBtn.disabled = false;
+				});
+		});
+	})();
+</script>
+{% endblock %}

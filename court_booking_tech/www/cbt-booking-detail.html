@@ -1,0 +1,481 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ booking_name }}{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block page_content %}
+<div class="cbt-wrap cbt-wrap--narrow">
+	{% include "court_booking_tech/templates/includes/cbt_portal_head.html" %}
+
+	<div class="cbt-error" id="cbt-error" hidden></div>
+	<div class="cbt-ok" id="cbt-ok" hidden></div>
+
+	<div class="cbt-card" id="cbt-status-card">
+		<div class="cbt-card-head">
+			<div style="flex:1;min-width:0">
+				<p class="cbt-card-title" id="cbt-court"></p>
+				<p class="cbt-card-sub" id="cbt-where"></p>
+				<p class="cbt-card-sub" id="cbt-when"></p>
+			</div>
+			<span class="cbt-badge" id="cbt-status"></span>
+		</div>
+		<div class="cbt-note" id="cbt-clock-box" hidden>
+			<span id="cbt-clock-label"></span>
+			<span class="cbt-countdown" id="cbt-clock">—</span>
+		</div>
+		{# Section-16: a customer whose paid booking has been released must not
+		   have to work out what "No Show" means from a badge. #}
+		<div class="cbt-note" id="cbt-noshow-note" data-testid="noshow-note" hidden>
+			{{ _("No show — the court was released so someone else could use it. Your payment stands and this statement is still valid; talk to the facility if you think this is wrong.") }}
+		</div>
+		{# Section-19 (Backlog B5): the two halves of a move each explain
+		   themselves. Without these the cancelled half is a bare "Cancelled" the
+		   customer never asked for, and the replacement appears out of nowhere. #}
+		<div class="cbt-note cbt-note--moved" id="cbt-moved-to-note"
+			data-testid="moved-to-note" hidden></div>
+		<div class="cbt-note" id="cbt-moved-from-note"
+			data-testid="moved-from-note" hidden></div>
+		{# B53: this facility's cash policy, on the page someone opens when they
+		   want out of a booking. Rendered server-side and only when it differs
+		   from the default, so a Refund company's page is unchanged. #}
+		{% if refund_note %}
+			<div class="cbt-note" data-testid="refund-note">{{ refund_note }}</div>
+		{% endif %}
+	</div>
+
+	<div class="cbt-card">
+		<table class="cbt-lines" id="cbt-money"></table>
+	</div>
+
+	<div class="cbt-card" id="cbt-pay-card" hidden>
+		<p class="cbt-card-title">{{ _("How to pay") }}</p>
+		{# Backlog B29: the channel the customer chose at checkout, with its
+		   account details — the one place to look while paying. #}
+		<div class="cbt-channels" id="cbt-pay-channel" data-testid="pay-channel"></div>
+		<div class="cbt-instructions cbt-muted" id="cbt-instructions"></div>
+	</div>
+
+	{# ---- proofs -------------------------------------------------------- #}
+	<div class="cbt-card" id="cbt-proof-card">
+		<p class="cbt-card-title">{{ _("Payment proof") }}</p>
+		<div class="cbt-note" id="cbt-deadline-note" hidden></div>
+		<div class="cbt-error" id="cbt-reject-note" hidden></div>
+
+		<div id="cbt-upload-zone" hidden>
+			<div class="cbt-drop" id="cbt-drop" role="button" tabindex="0">
+				<strong>{{ _("Drop your receipt here") }}</strong><br>
+				<span class="cbt-small" id="cbt-drop-hint">{{ _("or tap to choose a file") }}</span>
+			</div>
+			<input type="file" id="cbt-file" accept=".jpg,.jpeg,.png,.pdf" hidden>
+			{# Backlog B29: "I paid through…" — pre-set to the channel chosen at
+			   checkout; shown only when the facility offers more than one. #}
+			<select id="cbt-proof-channel" class="form-control" style="margin-top:.6rem"
+				aria-label="{{ _('Paid through') }}" data-testid="proof-channel" hidden></select>
+			<input type="text" id="cbt-reference" class="form-control" style="margin-top:.6rem"
+				placeholder="{{ _('Reference number (optional)') }}">
+			<button type="button" class="btn btn-primary btn-block" id="cbt-upload"
+				style="margin-top:.6rem" disabled>{{ _("Send proof") }}</button>
+		</div>
+
+		<div class="cbt-proofs" id="cbt-proofs"></div>
+	</div>
+
+	{# ---- billing ------------------------------------------------------- #}
+	<div class="cbt-card" id="cbt-billing-card" hidden>
+		<p class="cbt-card-title">{{ _("Billing statement") }}</p>
+		<p class="cbt-card-sub" id="cbt-invoice-status"></p>
+		<div class="cbt-actions">
+			<a class="btn btn-default" id="cbt-print-link" target="_blank" rel="noopener">
+				{{ _("View / print") }}
+			</a>
+			<a class="btn btn-default" id="cbt-pdf-link">{{ _("Download PDF") }}</a>
+		</div>
+	</div>
+
+	{# ---- branch -------------------------------------------------------- #}
+	<div class="cbt-card" id="cbt-branch-card" hidden>
+		<p class="cbt-card-title">{{ _("Getting there") }}</p>
+		<p class="cbt-card-sub" id="cbt-address"></p>
+		<iframe class="cbt-mapembed" id="cbt-map" loading="lazy"
+			referrerpolicy="no-referrer-when-downgrade" title="{{ _('Branch map') }}"></iframe>
+		<div class="cbt-actions">
+			<a class="btn btn-default" id="cbt-directions" target="_blank" rel="noopener">
+				{{ _("Get directions") }}
+			</a>
+		</div>
+	</div>
+
+	<button type="button" class="btn btn-default btn-block" id="cbt-cancel" hidden>
+		{{ _("Cancel this booking") }}
+	</button>
+	{% include "court_booking_tech/templates/includes/cbt_portal_foot.html" %}
+</div>
+
+<script>
+	(function () {
+		"use strict";
+
+		var BOOKING = {{ booking_name | tojson }};
+		var BADGES = {
+			Reserved: "cbt-badge--reserved", Confirmed: "cbt-badge--confirmed",
+			Extended: "cbt-badge--extended", Completed: "cbt-badge--completed",
+			Cancelled: "cbt-badge--dead", Expired: "cbt-badge--dead",
+			"No Show": "cbt-badge--noshow",
+		};
+
+		var errorBox = document.getElementById("cbt-error");
+		var okBox = document.getElementById("cbt-ok");
+		var fileInput = document.getElementById("cbt-file");
+		var dropZone = document.getElementById("cbt-drop");
+		var uploadButton = document.getElementById("cbt-upload");
+		var stopClock = null;
+		var chosenFile = null;
+
+		function esc(value) {
+			var div = document.createElement("div");
+			div.textContent = value == null ? "" : value;
+			return div.innerHTML;
+		}
+		/* Backlog B45: names for the ONE implementation (cbt.fmt, from
+		   public/js/cbt_time_format.js via the portal head include). This page's
+		   fork carried the `% 24` that /my-bookings' had lost — which is the
+		   argument for not having forks at all. */
+		function money(value) { return cbt.fmt.money(value); }
+		function label(hhmmss) { return cbt.fmt.timeShort(hhmmss); }
+		function timeRange(start, end) { return cbt.fmt.timeRange(start, end); }
+		function stamp(value) {
+			if (!value) return "";
+			var date = new Date(String(value).replace(" ", "T"));
+			return date.toLocaleString("en-PH", {
+				weekday: "short", day: "numeric", month: "short",
+				hour: "numeric", minute: "2-digit",
+			});
+		}
+		function show(el, text) { el.innerHTML = text; el.hidden = !text; }
+		// Backlog B29: the chosen channel's card (static — the pick was made at
+		// checkout; the proof form below is where a different channel is named).
+		function channelCard(channel) {
+			var meta = [];
+			if (channel.account_name) meta.push(esc(channel.account_name));
+			if (channel.account_number) meta.push(esc(channel.account_number));
+			return (
+				'<div class="cbt-channel cbt-channel--static" data-channel="' + esc(channel.name) + '">' +
+				'<span class="cbt-channel-body">' +
+					'<span class="cbt-channel-label">' + esc(channel.label) + "</span>" +
+					(meta.length ? '<span class="cbt-channel-meta">' + meta.join(" &middot; ") + "</span>" : "") +
+					(channel.instructions ? '<span class="cbt-channel-note">' + esc(channel.instructions) + "</span>" : "") +
+				"</span>" +
+				(channel.qr_image
+					// B50: the WRAP (tile + hint) is the control — see cbt.bindQrTiles.
+					? '<span class="cbt-channel-qr-wrap" role="button" tabindex="0" data-qr-zoom' +
+							' aria-label="' + "{{ _('Enlarge the QR code') }}" + '">' +
+						'<img class="cbt-channel-qr" src="' + esc(channel.qr_image) + '" alt="QR">' +
+						'<span class="cbt-channel-qr-hint cbt-small cbt-muted">' +
+							"{{ _('Tap or click to enlarge') }}" + "</span>" +
+						"</span>"
+					: "") +
+				"</div>"
+			);
+		}
+		// Section-19: a move counterpart's slot, escaped — `show` writes
+		// innerHTML, and this is the one place the page interpolates a value
+		// derived from another document.
+		function whenLabel(when) {
+			return esc(when.date) + " · " + label(when.start_time);
+		}
+
+		function render(data) {
+			document.getElementById("cbt-court").textContent = data.court_name;
+			document.getElementById("cbt-where").textContent =
+				data.company_name + " · " + data.branch_name;
+			document.getElementById("cbt-when").textContent =
+				data.booking_date + " · " + timeRange(data.start_time, data.end_time);
+
+			// Section-19: a booking that was MOVED is not a cancellation the
+			// customer made. Same rule as the /my-bookings card, deliberately —
+			// the two surfaces must never disagree about what happened.
+			var moved = data.booking_status === "Cancelled" && !!data.rescheduled_to;
+			var badge = document.getElementById("cbt-status");
+			badge.textContent = moved ? "{{ _('Moved') }}" : data.booking_status;
+			badge.className =
+				"cbt-badge " + (moved ? "cbt-badge--moved" : BADGES[data.booking_status] || "");
+			document.getElementById("cbt-noshow-note").hidden =
+				data.booking_status !== "No Show";
+
+			/* ---- the move story, both directions -------------------------- */
+			var movedTo = document.getElementById("cbt-moved-to-note");
+			if (data.rescheduled_to) {
+				show(movedTo,
+					"{{ _('This booking was moved.') }} " +
+					'<a data-testid="moved-to-link" href="/my-bookings/' +
+					encodeURIComponent(data.rescheduled_to) + '">' +
+					(data.moved_to
+						? "{{ _('See the new booking') }} (" + whenLabel(data.moved_to) + ")"
+						: "{{ _('See the new booking') }}") +
+					"</a>");
+			} else {
+				movedTo.hidden = true;
+			}
+
+			var movedFrom = document.getElementById("cbt-moved-from-note");
+			if (data.rescheduled_from && data.moved_from) {
+				show(movedFrom,
+					'<a data-testid="moved-from-link" href="/my-bookings/' +
+					encodeURIComponent(data.rescheduled_from) + '">' +
+					"{{ _('Moved from') }} " + whenLabel(data.moved_from) + "</a>");
+			} else {
+				movedFrom.hidden = true;
+			}
+
+			/* ---- ONE governing clock, correctly labelled ------------------ */
+			var clockBox = document.getElementById("cbt-clock-box");
+			var target = null, text = "";
+			if (data.booking_status === "Reserved") {
+				if (data.has_pending_proof && data.verification_deadline_at) {
+					target = data.verification_deadline_at;
+					text = "{{ _('Being verified — decision expected within') }} ";
+				} else if (data.in_regrace && data.reservation_expires_at) {
+					target = data.reservation_expires_at;
+					text = "{{ _('Send a new proof within') }} ";
+				} else if (data.reservation_expires_at) {
+					target = data.reservation_expires_at;
+					text = "{{ _('Pay and upload proof within') }} ";
+				}
+			}
+			if (target) {
+				document.getElementById("cbt-clock-label").textContent = text;
+				if (stopClock) stopClock();
+				stopClock = cbtCountdown(
+					document.getElementById("cbt-clock"), target, data.server_now
+				);
+				clockBox.hidden = false;
+			} else {
+				clockBox.hidden = true;
+			}
+
+			/* ---- money (server figures only) ------------------------------ */
+			/* Section-14: a booking that crossed a rate boundary shows one line
+			   per segment. data.hourly_rate is their BLENDED average, so a
+			   single "Rate ₱275.00/hr × 2" row would state a price that appears
+			   on no rule and on no line of the statement this page links to. */
+			var segments = data.rate_segments || [];
+			var lines = "";
+			if (segments.length > 1) {
+				segments.forEach(function (segment) {
+					var note = segment.label ? " &middot; " + esc(segment.label) : "";
+					lines +=
+						'<tr><td data-testid="rate-breakdown">' +
+						timeRange(segment.start_time, segment.end_time) +
+						note + "</td><td>" + money(segment.hourly_rate) +
+						"/{{ _('hr') }} × " + segment.hours + "</td></tr>";
+				});
+			} else {
+				lines =
+					"<tr><td>{{ _('Rate') }}</td><td>" + money(data.hourly_rate) +
+						"/{{ _('hr') }} × " + data.duration_hours + "</td></tr>";
+			}
+			if (data.vat_mode === "VAT") {
+				lines += "<tr><td>{{ _('VATable sales') }}</td><td>" +
+					money(data.vatable_amount) + "</td></tr>";
+				lines += "<tr><td>{{ _('VAT') }} (" + data.vat_percent + "%)</td><td>" +
+					money(data.vat_amount) + "</td></tr>";
+			} else {
+				lines += "<tr><td>{{ _('VAT') }}</td><td>{{ _('NON-VAT') }}</td></tr>";
+			}
+			// Backlog B27: the platform booking fee, as its own line — AFTER the
+			// VAT lines and outside them (B29 ruling), exactly as printed.
+			// Backlog B49: a continuation prints the fee it would have carried and
+			// the same amount back as the session's discount (net 0 on this row).
+			var waived = Number(data.platform_fee_waived || 0);
+			if (Number(data.platform_fee) + waived > 0) {
+				lines += '<tr><td data-testid="booking-fee">{{ _("Booking fee") }}</td><td>' +
+					money(Number(data.platform_fee) + waived) + "</td></tr>";
+			}
+			if (waived > 0) {
+				lines += '<tr><td data-testid="continuous-discount">{{ _("Continuous booking discount") }}</td><td>-' +
+					money(waived) + "</td></tr>";
+			}
+			lines += '<tr class="cbt-line-total"><td>{{ _("Total") }}</td><td>' +
+				money(data.total_amount) + "</td></tr>";
+			document.getElementById("cbt-money").innerHTML = lines;
+
+			var payCard = document.getElementById("cbt-pay-card");
+			var chosen = data.payment_channel_detail;
+			document.getElementById("cbt-pay-channel").innerHTML = chosen ? channelCard(chosen) : "";
+			cbt.bindQrTiles(document.getElementById("cbt-pay-channel"));
+			// 2026-09-04 (user ruling): the channel's own note wins; the company
+			// text is the fallback for a channel that carries none.
+			document.getElementById("cbt-instructions").textContent =
+				chosen && chosen.instructions ? "" : (data.payment_instructions || "");
+			payCard.hidden = !(
+				(chosen || data.payment_instructions) && data.booking_status === "Reserved"
+			);
+
+			/* ---- proof zone ----------------------------------------------- */
+			document.getElementById("cbt-upload-zone").hidden = !data.can_upload_proof;
+			// B29: the "I paid through…" picker — the facility's enabled transfer
+			// channels, the checkout choice pre-selected (kept as an option even if
+			// it has since been disabled, so the form never silently re-routes a
+			// payment the customer already made).
+			var channelSelect = document.getElementById("cbt-proof-channel");
+			var offered = (data.payment_channels || []).slice();
+			if (chosen && !offered.some(function (c) { return c.name === chosen.name; })) {
+				offered.push(chosen);
+			}
+			channelSelect.innerHTML = offered.map(function (channel) {
+				return '<option value="' + esc(channel.name) + '"' +
+					(channel.name === data.payment_channel ? " selected" : "") + ">" +
+					esc(channel.label) + "</option>";
+			}).join("");
+			channelSelect.hidden = offered.length < 2;
+			document.getElementById("cbt-drop-hint").textContent =
+				"{{ _('JPG, PNG or PDF up to') }} " + data.proof_max_mb + " MB";
+
+			// The exact deadline + the office-hours sentence: the two things a
+			// customer cannot compute for themselves (PLAN §5a).
+			var deadlineNote = document.getElementById("cbt-deadline-note");
+			if (data.has_pending_proof && data.verification_deadline_at) {
+				show(deadlineNote,
+					"{{ _('Proof received — it will be verified by') }} <strong>" +
+					esc(stamp(data.verification_deadline_at)) + "</strong>. " +
+					esc(data.company_name) + " {{ _('verifies payments') }} " +
+					esc(data.office_hours_summary) + ".");
+			} else {
+				deadlineNote.hidden = true;
+			}
+
+			var rejectNote = document.getElementById("cbt-reject-note");
+			if (data.last_rejection_reason && data.in_regrace) {
+				show(rejectNote, "{{ _('Your proof was not accepted') }} (" +
+					esc(data.last_rejection_reason) +
+					"). {{ _('Please upload a clearer one before the timer runs out.') }}");
+			} else if (data.last_rejection_reason && data.booking_status === "Expired") {
+				show(rejectNote, "{{ _('Your proof was not accepted') }} (" +
+					esc(data.last_rejection_reason) +
+					"). {{ _('This reservation has been released — please contact the branch if you already paid.') }}");
+			} else {
+				rejectNote.hidden = true;
+			}
+
+			var proofBox = document.getElementById("cbt-proofs");
+			proofBox.innerHTML = "";
+			(data.proofs || []).forEach(function (proof) {
+				var tile = document.createElement("div");
+				tile.className = "cbt-proof";
+				tile.dataset.status = proof.status;
+				// Served through the guarded API: the raw /private/files URL
+				// 403s for its own owner (S5 as-built 8).
+				var preview = proof.is_pdf
+					? '<div class="cbt-proof-meta"><a href="' + esc(proof.file_url) +
+						'" target="_blank" rel="noopener">{{ _("View PDF") }}</a></div>'
+					: '<img src="' + esc(proof.file_url) + '" alt="{{ _("Payment proof") }}">';
+				var claimed = (data.payment_channels || []).concat(chosen ? [chosen] : [])
+					.find(function (c) { return c.name === proof.payment_channel; });
+				tile.innerHTML = preview +
+					'<div class="cbt-proof-meta"><strong>' + esc(proof.status) + "</strong><br>" +
+					esc(stamp(proof.uploaded_at)) +
+					(claimed ? "<br>{{ _('via') }} " + esc(claimed.label) : "") +
+					(proof.rejection_reason ? "<br>" + esc(proof.rejection_reason) : "") +
+					"</div>";
+				proofBox.appendChild(tile);
+			});
+
+			/* ---- billing + branch + cancel -------------------------------- */
+			var billing = document.getElementById("cbt-billing-card");
+			if (data.billing_doc) {
+				document.getElementById("cbt-invoice-status").textContent =
+					data.invoice_status || "";
+				document.getElementById("cbt-print-link").href =
+					"/billing-statement?booking=" + encodeURIComponent(data.booking);
+				document.getElementById("cbt-pdf-link").href =
+					"/api/method/court_booking_tech.api.portal.download_invoice_pdf?booking=" +
+					encodeURIComponent(data.booking);
+				billing.hidden = false;
+			}
+
+			if (data.branch_latitude && data.branch_longitude) {
+				document.getElementById("cbt-address").textContent = data.branch_address || "";
+				document.getElementById("cbt-map").src =
+					"https://maps.google.com/maps?q=" + data.branch_latitude + "," +
+					data.branch_longitude + "&output=embed";
+				document.getElementById("cbt-directions").href =
+					"https://www.google.com/maps/dir/?api=1&destination=" +
+					data.branch_latitude + "," + data.branch_longitude;
+				document.getElementById("cbt-branch-card").hidden = false;
+			}
+
+			document.getElementById("cbt-cancel").hidden = !data.can_cancel;
+		}
+
+		function load() {
+			return cbtGet("court_booking_tech.api.portal.get_my_booking_detail", {
+				name: BOOKING,
+			}).then(render).catch(function (err) {
+				show(errorBox, esc(err.message));
+			});
+		}
+
+		/* ---- upload -------------------------------------------------------- */
+		function chooseFile(file) {
+			chosenFile = file || null;
+			uploadButton.disabled = !chosenFile;
+			document.getElementById("cbt-drop-hint").textContent = chosenFile
+				? chosenFile.name
+				: "{{ _('or tap to choose a file') }}";
+		}
+
+		dropZone.addEventListener("click", function () { fileInput.click(); });
+		dropZone.addEventListener("keydown", function (event) {
+			if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInput.click(); }
+		});
+		["dragenter", "dragover"].forEach(function (name) {
+			dropZone.addEventListener(name, function (event) {
+				event.preventDefault();
+				dropZone.classList.add("cbt-drop--over");
+			});
+		});
+		["dragleave", "drop"].forEach(function (name) {
+			dropZone.addEventListener(name, function (event) {
+				event.preventDefault();
+				dropZone.classList.remove("cbt-drop--over");
+			});
+		});
+		dropZone.addEventListener("drop", function (event) {
+			if (event.dataTransfer.files.length) chooseFile(event.dataTransfer.files[0]);
+		});
+		fileInput.addEventListener("change", function () { chooseFile(fileInput.files[0]); });
+
+		uploadButton.addEventListener("click", function () {
+			if (!chosenFile) return;
+			var form = new FormData();
+			form.append("booking", BOOKING);
+			form.append("file", chosenFile);
+			form.append("reference_no", document.getElementById("cbt-reference").value || "");
+			form.append("payment_channel", document.getElementById("cbt-proof-channel").value || "");
+			uploadButton.disabled = true;
+			errorBox.hidden = true;
+			cbtUpload("court_booking_tech.api.proofs.upload_proof", form)
+				.then(function () {
+					show(okBox, "{{ _('Proof sent — the branch will verify it.') }}");
+					chooseFile(null);
+					document.getElementById("cbt-reference").value = "";
+					return load();
+				})
+				.catch(function (err) { show(errorBox, esc(err.message)); })
+				.finally(function () { uploadButton.disabled = !chosenFile; });
+		});
+
+		document.getElementById("cbt-cancel").addEventListener("click", function () {
+			if (!window.confirm("{{ _('Cancel this booking? The slot will be released.') }}")) return;
+			cbtFetch("court_booking_tech.api.portal.cancel_my_booking", { name: BOOKING })
+				.then(function () {
+					show(okBox, "{{ _('Booking cancelled.') }}");
+					return load();
+				})
+				.catch(function (err) { show(errorBox, esc(err.message)); });
+		});
+
+		load();
+	})();
+</script>
+{% endblock %}

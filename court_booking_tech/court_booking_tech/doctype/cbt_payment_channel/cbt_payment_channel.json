@@ -1,0 +1,224 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-08-27 22:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "channel_section",
+  "scope",
+  "company",
+  "label",
+  "kind",
+  "channel_column",
+  "enabled",
+  "sort_order",
+  "ledger_section",
+  "mode_of_payment",
+  "ledger_column",
+  "account_label",
+  "customer_section",
+  "account_name",
+  "account_number",
+  "customer_column",
+  "qr_image",
+  "instructions"
+ ],
+ "fields": [
+  {
+   "description": "One way money reaches this company — Cash at the desk, GCash, or a bank account. Set up by the platform for each tenant; Cash and GCash are created with the company. Disable a channel to hide it from every new payment; it stays on the payments that already used it.",
+   "fieldname": "channel_section",
+   "fieldtype": "Section Break",
+   "label": "Channel"
+  },
+  {
+   "default": "Tenant",
+   "description": "Tenant: one of this company's own channels. Platform: a channel the platform itself is paid through (recorded on platform statements).",
+   "fieldname": "scope",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Scope",
+   "options": "Tenant\nPlatform",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.scope!=='Platform'",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "mandatory_depends_on": "eval:doc.scope!=='Platform'",
+   "options": "CBT Company"
+  },
+  {
+   "description": "What customers and staff see in the picker — \"GCash\", \"BDO\", \"Cash\".",
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Label",
+   "reqd": 1
+  },
+  {
+   "description": "Cash pairs with the Cash payment method (confirms on the spot). Transfer pairs with Fund Transfer (proof hold) — GCash, Maya and every bank are Transfer. Fixed once created.",
+   "fieldname": "kind",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Kind",
+   "options": "Cash\nTransfer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "channel_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Off: hidden from every new payment (desk dialogs, checkout, proof upload) and kept on old ones. A channel with payments on it can never be deleted — only disabled.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "description": "Picker order; the first enabled channel of a kind is the default.",
+   "fieldname": "sort_order",
+   "fieldtype": "Int",
+   "label": "Sort Order"
+  },
+  {
+   "description": "How this channel appears in the tenant's books (docs/collection_flow_v1.md): the Mode of Payment name and the asset account it debits.",
+   "fieldname": "ledger_section",
+   "fieldtype": "Section Break",
+   "label": "For the ledger"
+  },
+  {
+   "description": "The ERPNext Mode of Payment name this channel maps to. Defaults to the label.",
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Data",
+   "label": "Mode of Payment"
+  },
+  {
+   "fieldname": "ledger_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The asset account name printed on the Tenant Ledger — e.g. \"Cash on Hand\", \"Cash in E-Wallet - GCash\", \"BDO Current Account\". Defaults from the kind / label.",
+   "fieldname": "account_label",
+   "fieldtype": "Data",
+   "label": "Ledger Account"
+  },
+  {
+   "depends_on": "eval:doc.kind==='Transfer'",
+   "description": "Shown to customers at checkout and on the booking page so they know where to send the money. This is a PUBLIC surface (the booking page is open to logged-out visitors).",
+   "fieldname": "customer_section",
+   "fieldtype": "Section Break",
+   "label": "Shown to customers"
+  },
+  {
+   "fieldname": "account_name",
+   "fieldtype": "Data",
+   "label": "Account Name"
+  },
+  {
+   "fieldname": "account_number",
+   "fieldtype": "Data",
+   "label": "Account Number"
+  },
+  {
+   "fieldname": "customer_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional QR code image (GCash / bank QR).",
+   "fieldname": "qr_image",
+   "fieldtype": "Attach Image",
+   "label": "QR Image"
+  },
+  {
+   "description": "Optional one-line note for this channel (\"send the screenshot to the desk\").",
+   "fieldname": "instructions",
+   "fieldtype": "Small Text",
+   "label": "Instructions"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "group": "Payments",
+   "link_doctype": "CBT Court Booking",
+   "link_fieldname": "payment_channel"
+  },
+  {
+   "group": "Payments",
+   "link_doctype": "CBT Booking Invoice",
+   "link_fieldname": "payment_channel"
+  },
+  {
+   "group": "Payments",
+   "link_doctype": "CBT Payment Proof",
+   "link_fieldname": "payment_channel"
+  },
+  {
+   "group": "Platform",
+   "link_doctype": "CBT Platform Statement",
+   "link_fieldname": "payment_channel"
+  }
+ ],
+ "modified": "2026-08-27 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Payment Channel",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin"
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff"
+  }
+ ],
+ "search_fields": "label,company,kind",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "label",
+ "track_changes": 1
+}

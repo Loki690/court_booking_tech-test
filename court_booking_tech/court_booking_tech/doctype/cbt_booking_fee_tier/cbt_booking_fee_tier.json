@@ -1,0 +1,57 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-08-27 20:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "from_count",
+  "to_count",
+  "fee"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "description": "The first tier starts at 1; each next tier starts right after the previous one ends. The counter resets every month.",
+   "fieldname": "from_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "From Booking #",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "description": "Leave BLANK on the last tier: it then covers every booking from its start upward.",
+   "fieldname": "to_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "To Booking #",
+   "non_negative": 1
+  },
+  {
+   "columns": 4,
+   "description": "Charged to the customer on top of the court, for each booking in this bracket.",
+   "fieldname": "fee",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Fee per Booking",
+   "non_negative": 1,
+   "options": "PHP",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-27 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Booking Fee Tier",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,22 @@
+{# The login page's signup panel (hooks.signup_form_template).
+
+   Deliberately NOT a <form>: frappe's login.js hard-binds `.form-signup`
+   submit and posts email+full_name token-less to the stock sign_up cmd —
+   with Turnstile ON that would fail with a confusing captcha error. A div
+   can never fire submit; it keeps the .form-signup class (login.js strips
+   `hide` on render) and the surrounding section handles #signup routing. #}
+<div class="form-signup hide">
+	<div class="page-card-body">
+		<p class="text-muted text-center mb-4 mt-2">
+			{{ _("Create one account and book courts at any facility.") }}
+		</p>
+	</div>
+	<div class="page-card-actions">
+		<a class="btn btn-sm btn-primary btn-block" href="/signup">
+			{{ _("Create an account") }}
+		</a>
+		<p class="text-center sign-up-message">
+			<a href="#login" class="blue">{{ _("Have an account? Login") }}</a>
+		</p>
+	</div>
+</div>

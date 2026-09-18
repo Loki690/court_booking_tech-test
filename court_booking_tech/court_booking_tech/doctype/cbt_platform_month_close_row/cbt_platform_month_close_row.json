@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "creation": "2026-08-27 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "company_name",
+  "status",
+  "billing_mode",
+  "commission_percent",
+  "subscription_fee",
+  "booking_count",
+  "booking_fees",
+  "confirmed_revenue",
+  "amount_due",
+  "expired_with_proof_count",
+  "expired_with_proof_value"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "billing_mode",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Billing Mode",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_percent",
+   "fieldtype": "Percent",
+   "label": "Commission %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subscription_fee",
+   "fieldtype": "Currency",
+   "label": "Subscription",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "description": "Per Booking tenants: PAID documents that carried a fee in the period — court bookings AND open play entries.",
+   "fieldname": "booking_count",
+   "fieldtype": "Int",
+   "label": "Fee Units",
+   "read_only": 1
+  },
+  {
+   "description": "Per Booking tenants: the booking fees their customers paid, collected by the tenant for the platform.",
+   "fieldname": "booking_fees",
+   "fieldtype": "Currency",
+   "label": "Booking Fees",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmed_revenue",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Confirmed Revenue",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_due",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount Due",
+   "options": "PHP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expired_with_proof_count",
+   "fieldtype": "Int",
+   "label": "Expired w/ Proof",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expired_with_proof_value",
+   "fieldtype": "Currency",
+   "label": "Expired w/ Proof (PHP)",
+   "options": "PHP",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-27 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Platform Month Close Row",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

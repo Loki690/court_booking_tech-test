@@ -1,0 +1,92 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:user",
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "phone",
+  "profile_column",
+  "home_latitude",
+  "home_longitude",
+  "address_text"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Phone"
+  },
+  {
+   "fieldname": "profile_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Home pin — powers nearest-first branch ordering. Set from the portal Leaflet picker.",
+   "fieldname": "home_latitude",
+   "fieldtype": "Float",
+   "label": "Home Latitude",
+   "precision": "6"
+  },
+  {
+   "fieldname": "home_longitude",
+   "fieldtype": "Float",
+   "label": "Home Longitude",
+   "precision": "6"
+  },
+  {
+   "description": "Vague is fine — used for display only, never for distance.",
+   "fieldname": "address_text",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Customer Profile",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "user,phone",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

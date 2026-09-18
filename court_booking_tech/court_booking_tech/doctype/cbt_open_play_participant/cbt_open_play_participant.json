@@ -1,0 +1,126 @@
+{
+ "actions": [],
+ "creation": "2026-07-24 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "customer_name",
+  "customer_phone",
+  "fee",
+  "discount_percent",
+  "platform_fee",
+  "payment_method",
+  "payment_channel",
+  "payment_status",
+  "proof_ref",
+  "billing_doc",
+  "checked_in_at"
+ ],
+ "fields": [
+  {
+   "description": "Leave EMPTY for a walk-in paying at the desk - then Customer Name is the identity that prints.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "User"
+  },
+  {
+   "description": "Fetched from the account when one is set; free text for a walk-in.",
+   "fetch_from": "customer.full_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "mandatory_depends_on": "eval:!doc.customer",
+   "read_only_depends_on": "eval:doc.customer"
+  },
+  {
+   "depends_on": "eval:!doc.customer",
+   "description": "Walk-ins only - contact number for session issues. Staff-visible (PLAN 8j).",
+   "fieldname": "customer_phone",
+   "fieldtype": "Data",
+   "label": "Customer Phone"
+  },
+  {
+   "description": "Entry fee charged to this participant before discount.",
+   "fieldname": "fee",
+   "fieldtype": "Currency",
+   "label": "Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_percent",
+   "fieldtype": "Percent",
+   "label": "Discount (%)",
+   "read_only": 1
+  },
+  {
+   "description": "The platform's per-participant fee on top of the session fee (Per Booking companies only; 0 on a Free entry). Printed as its own line on the participant's billing document.",
+   "fieldname": "platform_fee",
+   "fieldtype": "Currency",
+   "label": "Platform Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_method",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Payment Method",
+   "options": "Cash\nFund Transfer\nFree",
+   "read_only": 1
+  },
+  {
+   "description": "The channel this entry was paid through (Cash channel, GCash, a bank). Chosen when the player is added; staff may correct it when confirming a transfer.",
+   "fieldname": "payment_channel",
+   "fieldtype": "Link",
+   "label": "Payment Channel",
+   "options": "CBT Payment Channel",
+   "read_only": 1
+  },
+  {
+   "default": "Unpaid",
+   "description": "Cash and Free are paid on the spot; Fund Transfer stays Unpaid until staff confirm it. Open play payments carry NO verification clocks — participants are physically present.",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Payment Status",
+   "options": "Unpaid\nPaid",
+   "read_only": 1
+  },
+  {
+   "description": "Fund-transfer proof uploaded by staff on the participant's behalf.",
+   "fieldname": "proof_ref",
+   "fieldtype": "Link",
+   "label": "Payment Proof",
+   "options": "CBT Payment Proof",
+   "read_only": 1
+  },
+  {
+   "fieldname": "billing_doc",
+   "fieldtype": "Link",
+   "label": "Billing Document",
+   "options": "CBT Booking Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checked_in_at",
+   "fieldtype": "Datetime",
+   "label": "Checked In At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-27 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Open Play Participant",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

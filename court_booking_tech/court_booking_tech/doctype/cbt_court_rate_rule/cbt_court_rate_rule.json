@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-29 17:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "day_scope",
+  "start_time",
+  "end_time",
+  "hourly_rate",
+  "label"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "default": "All Days",
+   "description": "A specific day beats Weekdays/Weekends, which beats All Days, which beats the court's base rate.",
+   "fieldname": "day_scope",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Applies On",
+   "options": "All Days\nWeekdays\nWeekends\nMonday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "description": "Inclusive. A slot starting exactly at this time uses this rule.",
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "From",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "description": "Exclusive. A slot starting exactly at this time does NOT use this rule.",
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Until",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "hourly_rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Hourly Rate",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "description": "Shown on the quote and on the billing statement line, e.g. \"Night rate\".",
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Label"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-29 17:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Court Rate Rule",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

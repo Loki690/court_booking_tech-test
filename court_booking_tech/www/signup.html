@@ -1,0 +1,151 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Create an Account") }}{% endblock %}
+
+{% block page_content %}
+<div class="cbt-signup-wrap">
+	<div class="cbt-card" id="cbt-signup-card">
+		<h1 class="cbt-title">{{ _("Create your account") }}</h1>
+		<p class="cbt-subtitle">{{ _("One account. Book courts anywhere.") }}</p>
+
+		{% if provider_logins %}
+		<div class="cbt-social">
+			{% for provider in provider_logins %}
+			<a class="btn cbt-btn-social" href="{{ provider.auth_url }}">
+				{{ _("Continue with {0}").format(provider.provider_name) }}
+			</a>
+			{% endfor %}
+		</div>
+		<div class="cbt-divider"><span>{{ _("or sign up with email") }}</span></div>
+		{% endif %}
+
+		<form id="cbt-signup-form" novalidate>
+			<div class="form-group">
+				<label class="cbt-label" for="cbt-fullname">{{ _("Full Name") }}</label>
+				<input type="text" id="cbt-fullname" class="form-control" required
+					autocomplete="name" placeholder="{{ _('Juan dela Cruz') }}">
+			</div>
+			<div class="form-group">
+				<label class="cbt-label" for="cbt-email">{{ _("Email") }}</label>
+				<input type="email" id="cbt-email" class="form-control" required
+					autocomplete="username" placeholder="{{ _('you@example.com') }}">
+			</div>
+
+			{% if enable_turnstile %}
+			<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}"></div>
+			{% endif %}
+
+			<div class="cbt-error" id="cbt-signup-error" hidden></div>
+
+			<button type="submit" class="btn btn-primary cbt-btn-submit" id="cbt-signup-btn">
+				{{ _("Create account") }}
+			</button>
+		</form>
+
+		<p class="cbt-footnote">
+			<a href="/login">{{ _("Have an account? Log in") }}</a>
+		</p>
+	</div>
+
+	<div class="cbt-card" id="cbt-signup-done" hidden>
+		<h1 class="cbt-title">{{ _("Check your email") }}</h1>
+		<p class="cbt-subtitle" id="cbt-done-text">
+			{{ _("We sent you a link to finish creating your account and set your password.") }}
+		</p>
+		<a href="/login" class="btn btn-primary cbt-btn-submit">{{ _("Back to login") }}</a>
+	</div>
+</div>
+
+{# Section-23: this page does NOT include cbt_portal_head.html — it is a guest
+   auth surface with its own 420px shell and no nav (deliberately kept that way;
+   the shared topbar would render a second, wrong <h1> and a logged-in nav,
+   because `is_guest` is set only by portal_base_context). It takes the token
+   layer directly instead, so the one design system still reaches it. #}
+<link rel="stylesheet" href="{{ cbt_asset_url('/assets/court_booking_tech/css/cbt_theme.css') }}">
+
+<style>
+	body { background: var(--cbt-surface); }
+	.cbt-signup-wrap { max-width: 420px; margin: 2.5rem auto; padding: 0 1rem; }
+	.cbt-card { background: var(--cbt-card); border: 1px solid var(--cbt-line);
+		border-radius: var(--cbt-radius); padding: 1.75rem 1.5rem;
+		box-shadow: var(--cbt-shadow); }
+	.cbt-title { font-size: 1.4rem; margin: 0 0 .25rem; color: var(--cbt-ink);
+		letter-spacing: -.015em; font-weight: 650; }
+	.cbt-subtitle { color: var(--cbt-ink-muted); margin-bottom: 1.25rem; }
+	.cbt-label { font-weight: 500; color: var(--cbt-ink); }
+	.cbt-btn-social { display: block; width: 100%; margin-bottom: .5rem;
+		border: 1px solid var(--cbt-line); font-weight: 500; }
+	.cbt-btn-social:hover { border-color: var(--cbt-primary-line);
+		color: var(--cbt-primary-600); }
+	.cbt-divider { display: flex; align-items: center; gap: .75rem;
+		color: var(--cbt-ink-muted); margin: 1rem 0; font-size: .85rem; }
+	.cbt-divider::before, .cbt-divider::after { content: ""; flex: 1; height: 1px;
+		background: var(--cbt-line); }
+	.cbt-btn-submit { width: 100%; margin-top: .75rem; }
+	.cbt-signup-wrap .btn-primary { background: var(--cbt-primary);
+		border-color: var(--cbt-primary); color: #fff; }
+	.cbt-signup-wrap .btn-primary:hover, .cbt-signup-wrap .btn-primary:focus {
+		background: var(--cbt-primary-600); border-color: var(--cbt-primary-600);
+		color: #fff; }
+	.cbt-error { background: var(--cbt-blocked-bg); border: 1px solid var(--cbt-blocked-line);
+		color: var(--cbt-blocked-ink);
+		border-radius: var(--cbt-radius-sm); padding: .6rem .8rem; margin-top: .75rem;
+		font-size: .9rem; }
+	.cbt-footnote { text-align: center; margin: 1rem 0 0; }
+	.cbt-footnote a { color: var(--cbt-primary-600); font-weight: 500; }
+	.cf-turnstile { margin-top: .75rem; }
+</style>
+
+<script src="{{ cbt_asset_url('/assets/court_booking_tech/js/cbt_portal.js') }}"></script>
+{% if enable_turnstile %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
+<script>
+	(function () {
+		"use strict";
+		var form = document.getElementById("cbt-signup-form");
+		var btn = document.getElementById("cbt-signup-btn");
+		var errorBox = document.getElementById("cbt-signup-error");
+
+		function showError(text) {
+			errorBox.textContent = text;
+			errorBox.hidden = false;
+		}
+
+		form.addEventListener("submit", function (event) {
+			event.preventDefault();
+			errorBox.hidden = true;
+
+			var fullName = document.getElementById("cbt-fullname").value.trim();
+			var email = document.getElementById("cbt-email").value.trim();
+			if (!fullName || !email) {
+				showError({{ _("Please enter your name and a valid email.") | tojson }});
+				return;
+			}
+
+			var tokenInput = form.querySelector('[name="cf-turnstile-response"]');
+			btn.disabled = true;
+
+			// Posts to the STOCK dotted path — the server-side override
+			// (hooks.override_whitelisted_methods) is the enforcement seam.
+			cbtFetch("frappe.core.doctype.user.user.sign_up", {
+				email: email,
+				full_name: fullName,
+				redirect_to: "",
+				cf_turnstile_token: tokenInput ? tokenInput.value : null,
+			})
+				.then(function () {
+					document.getElementById("cbt-signup-card").hidden = true;
+					document.getElementById("cbt-signup-done").hidden = false;
+				})
+				.catch(function (err) {
+					showError(err.message);
+					if (window.turnstile) window.turnstile.reset();
+				})
+				.finally(function () {
+					btn.disabled = false;
+				});
+		});
+	})();
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+pytest>=8.0
+pytest-playwright>=0.6.2
+pytest-xdist>=3.6  # site-per-worker E2E parallelization (run_all_tests.sh -n N --dist loadfile)
+playwright>=1.49
+requests>=2.31  # bench_health liveness probe in conftest
+tzdata>=2024.1  # zoneinfo on Windows

@@ -1,0 +1,223 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("My bookings") }}{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block page_content %}
+<div class="cbt-wrap cbt-wrap--narrow">
+	{% include "court_booking_tech/templates/includes/cbt_portal_head.html" %}
+
+	<div class="cbt-error" id="cbt-error" hidden></div>
+	<div id="cbt-credits"></div>
+	<div id="cbt-open"></div>
+	<h2 class="cbt-card-title" id="cbt-past-title" style="margin:1.4rem 0 .6rem" hidden>
+		{{ _("Past bookings") }}
+	</h2>
+	<div id="cbt-past"></div>
+	<div id="cbt-loading"><div class="cbt-skeleton"></div><div class="cbt-skeleton"></div></div>
+	{% include "court_booking_tech/templates/includes/cbt_portal_foot.html" %}
+</div>
+
+<script>
+	(function () {
+		"use strict";
+
+		var BADGES = {
+			Reserved: "cbt-badge--reserved",
+			Confirmed: "cbt-badge--confirmed",
+			Extended: "cbt-badge--extended",
+			Completed: "cbt-badge--completed",
+			Cancelled: "cbt-badge--dead",
+			Expired: "cbt-badge--dead",
+			"No Show": "cbt-badge--noshow",
+		};
+
+		var openBox = document.getElementById("cbt-open");
+		var creditBox = document.getElementById("cbt-credits");
+		var pastBox = document.getElementById("cbt-past");
+		var pastTitle = document.getElementById("cbt-past-title");
+		var errorBox = document.getElementById("cbt-error");
+
+		function esc(value) {
+			var div = document.createElement("div");
+			div.textContent = value == null ? "" : value;
+			return div.innerHTML;
+		}
+		/* BACKLOG B45 — AND THE BUG THIS PAGE SHIPPED WITH.
+		   `label` used to be defined here, WITHOUT the `% 24` its twin in
+		   cbt-book.html carries and documents. A branch that closes at 23:59
+		   closes at MIDNIGHT, and its last slot's end_time is stored as
+		   "24:00:00" (S4 as-built 9) — so `24 % 12 || 12` gave 12 with an hour
+		   not less than 12, and this page printed a midnight-ending booking as
+		   "12:00 PM". NOON. On the customer's own list of what they booked.
+
+		   Both are now names for the one implementation: cbt.fmt, from
+		   public/js/cbt_time_format.js, which the portal head include loads. */
+		function money(value) { return cbt.fmt.money(value); }
+		function label(hhmmss) { return cbt.fmt.timeShort(hhmmss); }
+		function timeRange(start, end) { return cbt.fmt.timeRange(start, end); }
+
+		// Section-19 (Backlog B5). A booking that was MOVED reads as a facility
+		// mistake unless the card says so: the customer sees a Cancelled booking
+		// they did not cancel, next to a new one they did not make.
+		function wasMoved(booking) {
+			return booking.booking_status === "Cancelled" && !!booking.rescheduled_to;
+		}
+		function whenLabel(when) {
+			return esc(when.date) + " · " + label(when.start_time);
+		}
+
+		function card(booking, serverNow) {
+			var node = document.createElement("a");
+			node.className = "cbt-card";
+			node.href = "/my-bookings/" + encodeURIComponent(booking.booking);
+			node.dataset.booking = booking.booking;
+			// data-status stays the real status — E2E and any future filter read
+			// it (test_07 asserts on it). Only the BADGE softens, below.
+			node.dataset.status = booking.booking_status;
+
+			var logo = booking.company_logo
+				? '<img class="cbt-logo" src="' + esc(booking.company_logo) + '" alt="">'
+				: '<div class="cbt-logo-fallback">' +
+					esc((booking.company_name || "?").charAt(0).toUpperCase()) + "</div>";
+
+			node.innerHTML =
+				'<div class="cbt-card-head">' + logo +
+				'<div style="flex:1;min-width:0">' +
+					'<p class="cbt-card-title">' + esc(booking.court_name) + "</p>" +
+					// Cross-company by design: the company is named on every card.
+					'<p class="cbt-card-sub">' + esc(booking.company_name) + " &middot; " +
+						esc(booking.branch_name) + "</p>" +
+					'<p class="cbt-card-sub">' + esc(booking.booking_date) + " &middot; " +
+						timeRange(booking.start_time, booking.end_time) + "</p>" +
+				"</div>" +
+				'<div style="text-align:right">' +
+					'<span class="cbt-badge ' +
+						(wasMoved(booking)
+							? "cbt-badge--moved"
+							: BADGES[booking.booking_status] || "") + '">' +
+						(wasMoved(booking)
+							? "{{ _('Moved') }}"
+							: esc(booking.booking_status)) + "</span>" +
+					'<div class="cbt-small cbt-muted" style="margin-top:.35rem">' +
+						money(booking.total_amount) + "</div>" +
+				"</div></div>";
+
+			var deadline = booking.has_pending_proof
+				? booking.verification_deadline_at
+				: booking.reservation_expires_at;
+			if (booking.booking_status === "Reserved" && deadline) {
+				var row = document.createElement("p");
+				row.className = "cbt-card-sub cbt-small";
+				row.innerHTML = (booking.has_pending_proof
+					? "{{ _('Verification ends in') }} "
+					: "{{ _('Pay within') }} ") +
+					'<span class="cbt-countdown"></span>';
+				node.appendChild(row);
+				// B44: cbtCountdown writes the bare word "expired" into the span,
+				// so a lapsed hold read "Pay within expired". The whole sentence is
+				// replaced instead — the shared helper is left alone.
+				var closed = booking.has_pending_proof
+					? "{{ _('Verification window closed') }}"
+					: "{{ _('Payment window closed') }}";
+				cbtCountdown(
+					row.querySelector(".cbt-countdown"), deadline, serverNow,
+					function () { row.textContent = closed; }
+				);
+			}
+			return node;
+		}
+
+		// Section-19. The card itself is an <a>, so the "Moved to" link CANNOT go
+		// inside it — nested anchors are invalid HTML and the parser unnests them.
+		// It becomes a sibling in a wrapper styled as one attached card, which
+		// leaves the card node (class, data-booking, data-status) byte-identical
+		// for every selector that already relies on it.
+		//
+		// Gated on `moved_to`, the data it actually renders, rather than on
+		// `rescheduled_to`: if the two ever diverge the strip is omitted, instead
+		// of showing the customer "Moved to undefined · undefined".
+		function cardNode(booking, serverNow) {
+			var node = card(booking, serverNow);
+			if (!wasMoved(booking) || !booking.moved_to) return node;
+
+			var pair = document.createElement("div");
+			pair.className = "cbt-moved-pair";
+			pair.appendChild(node);
+
+			var link = document.createElement("a");
+			link.className = "cbt-moved-link";
+			link.href = "/my-bookings/" + encodeURIComponent(booking.rescheduled_to);
+			link.dataset.testid = "moved-to";
+			link.dataset.movedTo = booking.rescheduled_to;
+			link.innerHTML =
+				"↳ {{ _('Moved to') }} <strong>" + whenLabel(booking.moved_to) +
+				"</strong> — {{ _('see the new booking') }}";
+			pair.appendChild(link);
+			return pair;
+		}
+
+		// Backlog B44. A credit nobody can see is a liability the tenant owes and
+		// the customer never spends — /my-bookings is where they already are.
+		function renderCredits(credits) {
+			(credits || []).forEach(function (credit) {
+				var note = document.createElement("div");
+				note.className = "cbt-credit";
+				note.dataset.testid = "credit-balance";
+				note.dataset.company = credit.company;
+				note.innerHTML =
+					'<span class="cbt-credit-amount">' + money(credit.balance) + "</span>" +
+					'<span class="cbt-credit-where">' +
+						"{{ _('credit at') }} " + esc(credit.company_name) + "</span>" +
+					'<span class="cbt-credit-hint">' +
+						"{{ _('It comes off your total when you book here.') }}</span>";
+				creditBox.appendChild(note);
+			});
+		}
+
+		cbtGet("court_booking_tech.api.portal.get_my_bookings", {})
+			.then(function (data) {
+				document.getElementById("cbt-loading").remove();
+				renderCredits(data.credits);
+				var rows = data.bookings || [];
+				if (!rows.length) {
+					openBox.innerHTML =
+						'<div class="cbt-empty">{{ _("No bookings yet.") }}<br>' +
+						'<a href="/find-court">{{ _("Find a court near you") }}</a></div>';
+					return;
+				}
+				/* B35: a header above each group's first row, per box — a cart
+				   can have one row live and another past. Cards are unchanged. */
+				var seen = {};
+				rows.forEach(function (booking) {
+					var target = booking.is_open ? openBox : pastBox;
+					var group = booking.booking_group;
+					if (group) {
+						var key = group + "|" + (booking.is_open ? "open" : "past");
+						if (!seen[key]) {
+							seen[key] = rows.filter(function (other) {
+								return other.booking_group === group &&
+									other.is_open === booking.is_open;
+							}).length;
+							var head = document.createElement("p");
+							head.className = "cbt-small cbt-muted cbt-group-head";
+							head.dataset.testid = "booking-group";
+							head.dataset.group = group;
+							head.textContent = seen[key] === 1
+								? "{{ _('Part of one payment') }}"
+								: seen[key] + " {{ _('bookings · one payment') }}";
+							target.appendChild(head);
+						}
+					}
+					target.appendChild(cardNode(booking, data.server_now));
+				});
+				pastTitle.hidden = !pastBox.children.length;
+			})
+			.catch(function (err) {
+				document.getElementById("cbt-loading").remove();
+				errorBox.textContent = err.message;
+				errorBox.hidden = false;
+			});
+	})();
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+[
+ {
+  "desk_access": 1,
+  "docstatus": 0,
+  "doctype": "Role",
+  "is_custom": 0,
+  "modified": "2026-07-22 00:00:00.000000",
+  "name": "CBT Platform Admin",
+  "role_name": "CBT Platform Admin"
+ },
+ {
+  "desk_access": 1,
+  "docstatus": 0,
+  "doctype": "Role",
+  "is_custom": 0,
+  "modified": "2026-07-22 00:00:00.000000",
+  "name": "CBT Company Admin",
+  "role_name": "CBT Company Admin"
+ },
+ {
+  "desk_access": 1,
+  "docstatus": 0,
+  "doctype": "Role",
+  "is_custom": 0,
+  "modified": "2026-07-22 00:00:00.000000",
+  "name": "CBT Company Staff",
+  "role_name": "CBT Company Staff"
+ },
+ {
+  "desk_access": 0,
+  "docstatus": 0,
+  "doctype": "Role",
+  "is_custom": 0,
+  "modified": "2026-07-22 00:00:00.000000",
+  "name": "CBT Customer",
+  "role_name": "CBT Customer"
+ }
+]

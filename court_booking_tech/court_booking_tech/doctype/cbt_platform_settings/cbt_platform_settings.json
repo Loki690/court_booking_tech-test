@@ -1,0 +1,291 @@
+{
+ "actions": [],
+ "creation": "2026-07-22 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "booking_defaults_section",
+  "default_slot_duration_minutes",
+  "default_advance_booking_days",
+  "default_reservation_expiry_minutes",
+  "default_verification_hold_hours",
+  "billing_defaults_section",
+  "default_billing_mode",
+  "default_subscription_fee",
+  "default_commission_percent",
+  "billing_defaults_column",
+  "default_vat_percent",
+  "platform_identity_section",
+  "platform_legal_name",
+  "platform_tin",
+  "platform_identity_column",
+  "platform_address",
+  "proof_abuse_section",
+  "proof_max_mb",
+  "rejection_reupload_minutes",
+  "media_max_mb",
+  "proof_abuse_column",
+  "max_pending_proofs_per_booking",
+  "max_active_proof_holds_per_customer",
+  "portal_limits_section",
+  "portal_booking_limit_per_hour",
+  "max_cart_items",
+  "portal_limits_column",
+  "proof_upload_limit_per_hour",
+  "registration_section",
+  "enable_turnstile",
+  "turnstile_site_key",
+  "turnstile_secret_key",
+  "signup_ip_limit_per_hour",
+  "marketplace_section",
+  "bypass_gps_request"
+ ],
+ "fields": [
+  {
+   "fieldname": "booking_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Booking Defaults"
+  },
+  {
+   "default": "60",
+   "description": "Platform default slot length. Branches can override on their own records.",
+   "fieldname": "default_slot_duration_minutes",
+   "fieldtype": "Select",
+   "label": "Default Slot Duration (Minutes)",
+   "options": "30\n60"
+  },
+  {
+   "default": "30",
+   "description": "How far ahead a CUSTOMER may book on the portal: today + this many days, inclusive. Staff booking at the desk is never limited. Company-overridable.",
+   "fieldname": "default_advance_booking_days",
+   "fieldtype": "Int",
+   "label": "Default Advance Booking (Days)"
+  },
+  {
+   "default": "30",
+   "description": "Base clock: a Reserved booking with no payment proof expires this many minutes after creation. Company-overridable.",
+   "fieldname": "default_reservation_expiry_minutes",
+   "fieldtype": "Int",
+   "label": "Default Reservation Expiry (Minutes)"
+  },
+  {
+   "default": "4",
+   "description": "Verification clock: staff get this many cumulative OFFICE-HOURS hours to review a payment proof after the first upload. Company-overridable.",
+   "fieldname": "default_verification_hold_hours",
+   "fieldtype": "Int",
+   "label": "Default Verification Hold (Office Hours)"
+  },
+  {
+   "fieldname": "billing_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Billing Defaults"
+  },
+  {
+   "default": "Subscription",
+   "description": "How new companies are billed by the platform unless configured otherwise: flat subscription or a percentage cut of confirmed revenue.",
+   "fieldname": "default_billing_mode",
+   "fieldtype": "Select",
+   "label": "Default Billing Mode",
+   "options": "Subscription\nPercentage"
+  },
+  {
+   "default": "0",
+   "description": "Default monthly subscription fee for new companies (Billing Mode = Subscription).",
+   "fieldname": "default_subscription_fee",
+   "fieldtype": "Currency",
+   "label": "Default Subscription Fee"
+  },
+  {
+   "default": "0",
+   "description": "Default commission on confirmed revenue for new companies (Billing Mode = Percentage).",
+   "fieldname": "default_commission_percent",
+   "fieldtype": "Percent",
+   "label": "Default Commission (%)"
+  },
+  {
+   "fieldname": "billing_defaults_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "12",
+   "description": "VAT percentage used for VAT-registered companies' billing documents (amounts are VAT-inclusive).",
+   "fieldname": "default_vat_percent",
+   "fieldtype": "Percent",
+   "label": "Default VAT (%)"
+  },
+  {
+   "description": "Printed as the ISSUER on every CBT Platform Statement. Blank falls back to \"Court Booking Tech\".",
+   "fieldname": "platform_identity_section",
+   "fieldtype": "Section Break",
+   "label": "Platform Identity (printed on tenant statements)"
+  },
+  {
+   "fieldname": "platform_legal_name",
+   "fieldtype": "Data",
+   "label": "Platform Legal Name"
+  },
+  {
+   "fieldname": "platform_tin",
+   "fieldtype": "Data",
+   "label": "Platform TIN"
+  },
+  {
+   "fieldname": "platform_identity_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "platform_address",
+   "fieldtype": "Small Text",
+   "label": "Platform Address"
+  },
+  {
+   "description": "Platform-ONLY anti-abuse knobs — companies must not be able to relax these.",
+   "fieldname": "proof_abuse_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Proof & Abuse Caps"
+  },
+  {
+   "default": "10",
+   "description": "Maximum payment-proof file size in MB (jpg/png/pdf only, private files).",
+   "fieldname": "proof_max_mb",
+   "fieldtype": "Int",
+   "label": "Proof Max Size (MB)"
+  },
+  {
+   "default": "120",
+   "description": "Re-upload grace (minutes) after a recoverable rejection (unreadable / wrong amount / wrong reference). Granted at most once per booking.",
+   "fieldname": "rejection_reupload_minutes",
+   "fieldtype": "Int",
+   "label": "Rejection Re-upload Grace (Minutes)"
+  },
+  {
+   "default": "10",
+   "description": "Maximum size in MB for a facility photo or banner. Separate from the proof cap: these are marketing photos a tenant uploads once, not evidence a customer uploads under a countdown.",
+   "fieldname": "media_max_mb",
+   "fieldtype": "Int",
+   "label": "Media Max Size (MB)"
+  },
+  {
+   "fieldname": "proof_abuse_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "3",
+   "description": "Maximum simultaneously Pending proofs per booking. Rejected proofs free their slots.",
+   "fieldname": "max_pending_proofs_per_booking",
+   "fieldtype": "Int",
+   "label": "Max Pending Proofs per Booking"
+  },
+  {
+   "default": "8",
+   "description": "Maximum SLOTS a customer may hold unverified across ALL companies (this counts slots, not bookings, so one 4-hour booking is 4). Cap key uses a normalized email (+tag and Gmail dots stripped). It also bounds a cart: a single checkout can never be larger than this, or the customer could reserve slots they cannot then pay for.",
+   "fieldname": "max_active_proof_holds_per_customer",
+   "fieldtype": "Int",
+   "label": "Max Unpaid Slots Held per Customer"
+  },
+  {
+   "description": "Per-CUSTOMER hourly limits on the portal write endpoints. Per-user, not per-IP: PH carrier CGNAT puts hundreds of real customers behind one address. Staff desk actions are never throttled.",
+   "fieldname": "portal_limits_section",
+   "fieldtype": "Section Break",
+   "label": "Portal Rate Limits"
+  },
+  {
+   "default": "10",
+   "description": "Maximum portal reservations a single customer may create per hour.",
+   "fieldname": "portal_booking_limit_per_hour",
+   "fieldtype": "Int",
+   "label": "Portal Bookings per Customer per Hour"
+  },
+  {
+   "default": "8",
+   "description": "How many bookings one cart checkout may hold. A cart is reserved in ONE transaction and held on ONE pay-by clock, so this bounds both the transaction and how many slots a customer can hold unpaid at once.",
+   "fieldname": "max_cart_items",
+   "fieldtype": "Int",
+   "label": "Max Bookings per Cart"
+  },
+  {
+   "fieldname": "portal_limits_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "10",
+   "description": "Maximum payment proofs a single customer may upload per hour (all bookings). Staff uploads on a customer's behalf are not counted.",
+   "fieldname": "proof_upload_limit_per_hour",
+   "fieldtype": "Int",
+   "label": "Proof Uploads per Customer per Hour"
+  },
+  {
+   "description": "Manual email signup protection (D9). Social login is unaffected. Fail-closed: if Turnstile verification errors, manual signup is blocked — this toggle is the kill-switch.",
+   "fieldname": "registration_section",
+   "fieldtype": "Section Break",
+   "label": "Registration & Anti-bot"
+  },
+  {
+   "default": "0",
+   "description": "Enforce Cloudflare Turnstile on manual signup. OFF = wrapper passes through to the stock signup (kill-switch for Turnstile outages).",
+   "fieldname": "enable_turnstile",
+   "fieldtype": "Check",
+   "label": "Enable Turnstile"
+  },
+  {
+   "depends_on": "eval:doc.enable_turnstile",
+   "fieldname": "turnstile_site_key",
+   "fieldtype": "Data",
+   "label": "Turnstile Site Key"
+  },
+  {
+   "depends_on": "eval:doc.enable_turnstile",
+   "fieldname": "turnstile_secret_key",
+   "fieldtype": "Password",
+   "label": "Turnstile Secret Key"
+  },
+  {
+   "default": "25",
+   "description": "Per-IP signup backstop per hour. Deliberately generous (20–30): PH carrier CGNAT puts hundreds of users behind one IP — Turnstile is the gate, this is only a backstop.",
+   "fieldname": "signup_ip_limit_per_hour",
+   "fieldtype": "Int",
+   "label": "Signup Rate Limit per IP (per Hour)"
+  },
+  {
+   "fieldname": "marketplace_section",
+   "fieldtype": "Section Break",
+   "label": "Marketplace"
+  },
+  {
+   "default": "0",
+   "description": "When on, the court list never asks a visitor's browser for their location and lists every court alphabetically. Customers who saved a home pin still see the nearest courts first.",
+   "fieldname": "bypass_gps_request",
+   "fieldtype": "Check",
+   "label": "Bypass GPS Request"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-09-15 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Platform Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

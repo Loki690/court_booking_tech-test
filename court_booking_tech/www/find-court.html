@@ -1,0 +1,433 @@
+{% extends "templates/web.html" %}
+
+{% block title %}BookPickleBall — {{ _("Find a court") }}{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block page_content %}
+<div class="cbt-wrap">
+	{% include "court_booking_tech/templates/includes/cbt_portal_head.html" %}
+
+	<input type="search" id="cbt-search" class="form-control cbt-search"
+		placeholder="{{ _('Search by branch, company or area') }}"
+		aria-label="{{ _('Search courts') }}">
+
+	<div class="cbt-chips" id="cbt-type-filters" role="group"
+		aria-label="{{ _('Filter by sport') }}"></div>
+
+	<div class="cbt-note cbt-small" id="cbt-geo-note" hidden></div>
+	<div class="cbt-error" id="cbt-error" hidden></div>
+
+	{% if home_ad %}
+		<a class="cbt-ad" id="cbt-ad" data-testid="home-ad"
+			data-ad="{{ home_ad.name | e }}" href="{{ home_ad.link_url | e }}"
+			target="_blank" rel="sponsored noopener noreferrer">
+			<img class="cbt-ad-img" src="{{ home_ad.image | e }}"
+				alt="{{ home_ad.title | e }}" loading="lazy">
+			<span class="cbt-ad-tag" data-testid="home-ad-tag">{{ _("Sponsored") }}</span>
+		</a>
+	{% endif %}
+
+	<div id="cbt-results" aria-live="polite">
+		<div class="cbt-skeleton"></div>
+		<div class="cbt-skeleton"></div>
+		<div class="cbt-skeleton"></div>
+	</div>
+	{% include "court_booking_tech/templates/includes/cbt_portal_foot.html" %}
+</div>
+
+<div class="cbt-modal" id="cbt-branch-modal" hidden>
+	<div class="cbt-modal-body" role="dialog" aria-modal="true"
+		aria-labelledby="cbt-branch-title">
+		<div class="cbt-card-head">
+			<div style="flex:1;min-width:0">
+				<h2 class="cbt-card-title" id="cbt-branch-title"></h2>
+				<p class="cbt-card-sub" id="cbt-branch-company"></p>
+			</div>
+			<button type="button" class="btn btn-sm" id="cbt-branch-close"
+				aria-label="{{ _('Close') }}">&times;</button>
+		</div>
+		<p class="cbt-card-sub cbt-small" id="cbt-branch-address"></p>
+		<div class="cbt-chips cbt-social-row" id="cbt-branch-links" hidden></div>
+		<iframe class="cbt-mapembed" id="cbt-branch-map" loading="lazy"
+			referrerpolicy="no-referrer-when-downgrade" title="{{ _('Branch map') }}"></iframe>
+		<div class="cbt-actions">
+			<a class="btn btn-primary" id="cbt-branch-book">{{ _("Book this branch") }}</a>
+			<a class="btn btn-default" id="cbt-branch-directions" target="_blank"
+				rel="noopener">{{ _("Get directions") }}</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	(function () {
+		"use strict";
+
+		var HAS_SAVED_PIN = {{ "true" if has_saved_pin else "false" }};
+		var IS_GUEST = {{ "true" if is_guest else "false" }};
+		var BYPASS_GPS = {{ "true" if bypass_gps_request else "false" }};
+
+		var results = document.getElementById("cbt-results");
+		var searchBox = document.getElementById("cbt-search");
+		var filterBox = document.getElementById("cbt-type-filters");
+		var geoNote = document.getElementById("cbt-geo-note");
+		var errorBox = document.getElementById("cbt-error");
+		var modal = document.getElementById("cbt-branch-modal");
+
+		var state = { branches: [], courtType: "", origin: null };
+
+		function show(el, text) {
+			el.textContent = text;
+			el.hidden = !text;
+		}
+
+		function esc(value) {
+			var div = document.createElement("div");
+			div.textContent = value == null ? "" : value;
+			return div.innerHTML;
+		}
+
+		// esc() escapes < > &, which is enough for TEXT but not for a value
+		// going inside a double-quoted attribute — a stray quote would end the
+		// attribute early. Every attribute built below goes through this one.
+		function escAttr(value) {
+			return esc(value).replace(/"/g, "&quot;");
+		}
+
+		function money(value) {
+			return Number(value || 0).toLocaleString("en-PH", {
+				minimumFractionDigits: 0, maximumFractionDigits: 0,
+			});
+		}
+
+		// Strings this script builds at runtime. Translated once here so the
+		// page speaks one language and no English is hardcoded below.
+		var T = {
+			onePhoto: "{{ _('1 photo') }}",
+			nPhotos: "{{ _('{0} photos') }}",
+			seePhotos: "{{ _('See photos of {0}') }}",
+		};
+
+		function fill(template, values) {
+			return String(template).replace(/\{(\d+)\}/g, function (whole, i) {
+				return values[i];
+			});
+		}
+
+		function photoWord(count) {
+			return count === 1 ? T.onePhoto : fill(T.nPhotos, [count]);
+		}
+
+		// The company's own pages, keyed on geo.get_branches' `links[].kind`.
+		// Facebook is a filled mark and the other two are
+		// stroked outlines, which is how each network is actually recognised at
+		// 15px; an unknown kind draws nothing rather than an empty pill.
+		var SOCIAL_ICONS = {
+			website: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>' +
+				'<path d="M12 3c2.5 2.4 3.8 5.5 3.8 9S14.5 18.6 12 21' +
+				'c-2.5-2.4-3.8-5.5-3.8-9S9.5 5.4 12 3z"/>',
+			facebook: '<path d="M14.5 21v-7.5h2.4l.4-2.9h-2.8V8.8c0-.85.24-1.4 ' +
+				'1.45-1.4H17.4V4.8a19 19 0 0 0-2.2-.12c-2.2 0-3.7 1.34-3.7 ' +
+				'3.8v2.12H9v2.9h2.5V21z"/>',
+			instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/>' +
+				'<circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1.1"/>',
+		};
+
+		function socialLinks(links) {
+			return (links || []).map(function (link) {
+				var glyph = SOCIAL_ICONS[link.kind];
+				if (!glyph) return "";
+				var filled = link.kind === "facebook";
+				return '<a class="cbt-chip cbt-social-link" href="' +
+					escAttr(link.url) + '" target="_blank" rel="noopener noreferrer"' +
+					' title="' + escAttr(link.label) + '"' +
+					' aria-label="' + escAttr(link.label) + '">' +
+					'<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"' +
+					' focusable="false" fill="' + (filled ? "currentColor" : "none") +
+					'" stroke="' + (filled ? "none" : "currentColor") +
+					'" stroke-width="1.7" stroke-linecap="round"' +
+					' stroke-linejoin="round">' + glyph + "</svg></a>";
+			}).join("");
+		}
+
+		var loadSeq = 0;
+		function load() {
+			var mine = ++loadSeq;
+			var params = { court_type: state.courtType };
+			// Explicit coords only for browser geolocation; a saved pin is applied server-side.
+			if (state.origin) {
+				params.lat = state.origin.lat;
+				params.lng = state.origin.lng;
+			}
+			return cbtGet("court_booking_tech.geo.get_branches", params)
+				.then(function (rows) {
+					if (mine !== loadSeq) return;
+					state.branches = rows || [];
+					buildFilters();
+					render();
+				})
+				.catch(function (err) {
+					if (mine !== loadSeq) return;
+					results.innerHTML = "";
+					show(errorBox, err.message);
+				});
+		}
+
+		function buildFilters() {
+			if (filterBox.dataset.built) return;
+			var types = {};
+			state.branches.forEach(function (branch) {
+				(branch.court_types || []).forEach(function (type) { types[type] = 1; });
+			});
+			var names = Object.keys(types).sort();
+			if (!names.length) return;
+			filterBox.dataset.built = "1";
+			names.forEach(function (type) {
+				var chip = document.createElement("button");
+				chip.type = "button";
+				chip.className = "cbt-chip";
+				chip.textContent = type;
+				chip.setAttribute("aria-pressed", "false");
+				chip.addEventListener("click", function () {
+					var active = state.courtType === type;
+					state.courtType = active ? "" : type;
+					Array.prototype.forEach.call(filterBox.children, function (node) {
+						node.setAttribute(
+							"aria-pressed", String(node === chip && !active)
+						);
+					});
+					load();
+				});
+				filterBox.appendChild(chip);
+			});
+		}
+
+		function matchesSearch(branch, needle) {
+			if (!needle) return true;
+			return [branch.branch_name, branch.company_name, branch.address_text]
+				.join(" ").toLowerCase().indexOf(needle) !== -1;
+		}
+
+		function render() {
+			var needle = (searchBox.value || "").trim().toLowerCase();
+			var rows = state.branches.filter(function (branch) {
+				return matchesSearch(branch, needle);
+			});
+			results.innerHTML = "";
+			if (!rows.length) {
+				results.innerHTML =
+					'<div class="cbt-empty">{{ _("No courts match your search yet.") }}</div>';
+				return;
+			}
+			rows.forEach(function (branch) {
+				results.appendChild(card(branch));
+			});
+		}
+
+		function card(branch) {
+			// A <div>, not an <a>: the card now carries the company's own
+			// outbound links, and a nested anchor is invalid HTML (the same
+			// rule that made .cbt-moved-link a sibling). The TITLE is the
+			// anchor and its ::after stretches over the whole card, so the card
+			// is still one click target with a real href — and the social chips
+			// sit above that overlay. Both E2E hooks are on the element itself
+			// (.cbt-card[data-slug] + dataset), so neither notices.
+			var node = document.createElement("div");
+			// A card with a photograph gets the photo class so the image can bleed to the edges.
+			node.className = "cbt-card" +
+				(branch.company_banner ? " cbt-card--photo" : "");
+			var href = "/book?c=" + encodeURIComponent(branch.company_slug) +
+				"&b=" + encodeURIComponent(branch.branch_slug);
+			// The slug and company attributes carry the card order for tests.
+			node.dataset.slug = branch.branch_slug;
+			node.dataset.company = branch.company_slug;
+
+			var logo = branch.company_logo
+				? '<img class="cbt-logo" src="' + esc(branch.company_logo) +
+					'" alt="' + esc(branch.company_name) + '">'
+				: '<div class="cbt-logo-fallback">' +
+					esc((branch.company_name || "?").charAt(0).toUpperCase()) + "</div>";
+
+			var meta = [];
+			if (branch.distance_km !== null && branch.distance_km !== undefined) {
+				meta.push('<span class="cbt-distance">' +
+					branch.distance_km.toFixed(1) + " km</span>");
+			}
+			if (branch.price_from) {
+				meta.push('<span class="cbt-small cbt-muted">{{ _("from") }} &#8369;' +
+					money(branch.price_from) + "/{{ _('hr') }}</span>");
+			}
+			// One row for the booking status, the week's hours and the sports, in the server's own strings.
+			var status = [];
+			if (branch.status_label) {
+				status.push('<span class="cbt-badge ' +
+					(branch.open_now ? "cbt-badge--open" : "cbt-badge--closed") +
+					'" data-testid="branch-status">' + esc(branch.status_label) + "</span>");
+			}
+			if (branch.hours_summary) {
+				status.push('<span class="cbt-hours" data-testid="branch-hours">' +
+					esc(branch.hours_summary) + "</span>");
+			}
+			(branch.court_types || []).forEach(function (type) {
+				status.push('<span class="cbt-chip">' + esc(type) + "</span>");
+			});
+
+			// A real <img>, never a CSS background; with photos behind it the picture opens them.
+			var photo = "";
+			if (branch.cover_url) {
+				var img = '<img class="cbt-card-photo" src="' + esc(branch.cover_url) +
+					'" alt="" loading="lazy">';
+				photo = branch.photo_count
+					? '<button type="button" class="cbt-card-photo-btn" ' +
+						'data-testid="branch-photos" ' +
+						'aria-label="' + escAttr(fill(T.seePhotos, [branch.branch_name])) + '">' +
+						img +
+						'<span class="cbt-photo-pill" data-testid="branch-photo-count">' +
+							esc(photoWord(branch.photo_count)) +
+						"</span>" +
+					  "</button>"
+					: img;
+			}
+
+			// Four stacked rows, not one wrapping blob. "<Company> - <Branch>"
+			// as a single bold line wrapped mid-name in the narrow column and
+			// read as one long word; the company belongs beside its own mark
+			// and the branch — the thing that differs between two cards of the
+			// same company — gets the headline to itself.
+			var brand = '<div class="cbt-card-brand">' + logo +
+				(branch.company_name
+					? '<span class="cbt-card-company">' + esc(branch.company_name) + "</span>"
+					: "") + "</div>";
+			var links = socialLinks(branch.links);
+
+			node.innerHTML = photo +
+				'<div class="cbt-card-head">' + brand +
+					'<a class="cbt-card-title cbt-card-link" href="' + escAttr(href) +
+						'">' + esc(branch.branch_name) + "</a>" +
+					(branch.address_text
+						? '<p class="cbt-card-sub">' + esc(branch.address_text) + "</p>"
+						: "") +
+					// An empty row still carries .cbt-chips' top margin, so each
+					// one is drawn only when it has something in it.
+					(meta.length ? '<div class="cbt-chips">' + meta.join("") + "</div>" : "") +
+					(status.length ? '<div class="cbt-chips">' + status.join("") + "</div>" : "") +
+					(links ? '<div class="cbt-chips cbt-social-row">' + links + "</div>" : "") +
+				"</div>";
+
+			var photoBtn = node.querySelector(".cbt-card-photo-btn");
+			if (photoBtn) {
+				photoBtn.addEventListener("click", function (event) {
+					event.preventDefault();
+					event.stopPropagation();
+					cbtGallery.open(branch.company_slug, branch.branch_slug);
+				});
+			}
+
+			node.addEventListener("click", function (event) {
+				// A social chip is a real outbound link to somebody else's
+				// site — never swallow it into the branch modal.
+				if (event.target.closest("a.cbt-social-link")) return;
+				// The picture opens the photos, not the map.
+				if (event.target.closest(".cbt-card-photo-btn")) return;
+				if (!branch.latitude || !branch.longitude) return; // no map -> straight to booking
+				event.preventDefault();
+				openBranch(branch);
+			});
+			return node;
+		}
+
+		function openBranch(branch) {
+			document.getElementById("cbt-branch-title").textContent = branch.branch_name;
+			document.getElementById("cbt-branch-company").textContent = branch.company_name;
+			document.getElementById("cbt-branch-address").textContent =
+				branch.address_text || "";
+			// Same chips as the card, same row object — a customer who opened
+			// the modal to look at the map is exactly the one deciding whether
+			// to go, and the company's own pages are what they check next.
+			var branchLinks = document.getElementById("cbt-branch-links");
+			branchLinks.innerHTML = socialLinks(branch.links);
+			branchLinks.hidden = !(branch.links || []).length;
+			// Keyless Google embed — no API key, no billing account.
+			document.getElementById("cbt-branch-map").src =
+				"https://maps.google.com/maps?q=" + branch.latitude + "," +
+				branch.longitude + "&output=embed";
+			document.getElementById("cbt-branch-directions").href =
+				"https://www.google.com/maps/dir/?api=1&destination=" +
+				branch.latitude + "," + branch.longitude;
+			document.getElementById("cbt-branch-book").href =
+				"/book?c=" + encodeURIComponent(branch.company_slug) +
+				"&b=" + encodeURIComponent(branch.branch_slug);
+			modal.hidden = false;
+		}
+
+		function closeBranch() { modal.hidden = true; }
+		document.getElementById("cbt-branch-close").addEventListener("click", closeBranch);
+		modal.addEventListener("click", function (event) {
+			if (event.target === modal) closeBranch();
+		});
+
+		searchBox.addEventListener("input", render);
+
+		var loaded = false;
+		function ensureLoaded() {
+			if (loaded) return;
+			loaded = true;
+			load();
+		}
+
+		// The list never waits on the browser's prompt.
+		function locate() {
+			var answered = false;
+			function notAsked() {
+				if (answered) return;
+				show(geoNote, "{{ _('Showing all courts. Allow location for nearest-first results.') }}");
+				ensureLoaded();
+			}
+			show(geoNote, "{{ _('Finding courts near you…') }}");
+			navigator.geolocation.getCurrentPosition(
+				function (position) {
+					answered = true;
+					state.origin = {
+						lat: position.coords.latitude, lng: position.coords.longitude,
+					};
+					geoNote.hidden = true;
+					loaded = true;
+					load();
+				},
+				function () {
+					answered = true;
+					show(geoNote, IS_GUEST
+						? "{{ _('Location off — showing all courts. Log in and save your home pin for nearest-first results.') }}"
+						: "{{ _('Location off — showing all courts. Set your home pin in My profile for nearest-first results.') }}");
+					ensureLoaded();
+				},
+				{ timeout: 6000, maximumAge: 300000 }
+			);
+			try {
+				navigator.permissions.query({ name: "geolocation" }).then(function (status) {
+					if (status.state === "granted") {
+						setTimeout(ensureLoaded, 1500);
+					} else {
+						notAsked();
+					}
+				}, notAsked);
+			} catch (err) {
+				notAsked();
+			}
+		}
+
+		// Distance origin: saved pin (server-side) > browser geolocation > nothing.
+		if (HAS_SAVED_PIN) {
+			load();
+		} else if (BYPASS_GPS || !navigator.geolocation) {
+			if (BYPASS_GPS) {
+				show(geoNote, IS_GUEST
+					? "{{ _('Showing all courts. Log in and save your home pin for nearest-first results.') }}"
+					: "{{ _('Showing all courts. Set your home pin in My profile for nearest-first results.') }}");
+			}
+			load();
+		} else {
+			locate();
+		}
+	})();
+</script>
+{% endblock %}

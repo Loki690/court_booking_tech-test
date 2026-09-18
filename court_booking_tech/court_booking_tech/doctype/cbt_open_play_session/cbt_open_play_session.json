@@ -1,0 +1,318 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-07-24 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "session_section",
+  "company",
+  "branch",
+  "title",
+  "session_column",
+  "session_date",
+  "start_time",
+  "end_time",
+  "court_type",
+  "status",
+  "rotation_section",
+  "rotation_mode",
+  "rotation_minutes",
+  "rally_points",
+  "rotation_column",
+  "auto_rotate",
+  "pricing_section",
+  "entry_fee",
+  "member_discount_percent",
+  "pricing_column",
+  "max_participants",
+  "current_participants",
+  "total_revenue",
+  "courts_section",
+  "courts",
+  "participants_section",
+  "participants",
+  "queue_section",
+  "queue",
+  "assignments_section",
+  "assignments"
+ ],
+ "fields": [
+  {
+   "fieldname": "session_section",
+   "fieldtype": "Section Break",
+   "label": "Session"
+  },
+  {
+   "description": "Mirrored from the branch by cbt_open_play_session.js. NOT server-side: frappe runs _validate_links() and the mandatory check before any controller hook, so a client mirror is the only place this can be set in time.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "CBT Company",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "options": "CBT Branch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "session_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "session_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Session Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "label": "Start Time",
+   "reqd": 1
+  },
+  {
+   "description": "Same-day sessions only — the end time must be after the start time.",
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "End Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "court_type",
+   "fieldtype": "Select",
+   "label": "Court Type",
+   "options": "Pickleball\nBadminton\nBasketball\nTennis\nMulti-purpose"
+  },
+  {
+   "default": "Scheduled",
+   "description": "Changed only through the Open / Complete / Cancel actions — never edited directly.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Scheduled\nOpen\nCompleted\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rotation_section",
+   "fieldtype": "Section Break",
+   "label": "Rotation"
+  },
+  {
+   "default": "Timed",
+   "description": "Timed runs a countdown per court; Rally plays to a point target and staff end the game.",
+   "fieldname": "rotation_mode",
+   "fieldtype": "Select",
+   "label": "Rotation Mode",
+   "options": "Timed\nRally",
+   "reqd": 1
+  },
+  {
+   "default": "15",
+   "depends_on": "eval:doc.rotation_mode=='Timed'",
+   "fieldname": "rotation_minutes",
+   "fieldtype": "Int",
+   "label": "Rotation Minutes"
+  },
+  {
+   "default": "11",
+   "depends_on": "eval:doc.rotation_mode=='Rally'",
+   "fieldname": "rally_points",
+   "fieldtype": "Int",
+   "label": "Rally Points"
+  },
+  {
+   "fieldname": "rotation_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.rotation_mode=='Timed'",
+   "description": "Rotate automatically when a court timer hits zero — the board triggers it while it is open (no unattended cron).",
+   "fieldname": "auto_rotate",
+   "fieldtype": "Check",
+   "label": "Auto-Rotate When Time Expires"
+  },
+  {
+   "fieldname": "pricing_section",
+   "fieldtype": "Section Break",
+   "label": "Pricing & Capacity"
+  },
+  {
+   "description": "Flat per-person entry fee.",
+   "fieldname": "entry_fee",
+   "fieldtype": "Currency",
+   "label": "Entry Fee",
+   "non_negative": 1
+  },
+  {
+   "description": "Discount applied to participants holding an active membership (memberships arrive in a later section).",
+   "fieldname": "member_discount_percent",
+   "fieldtype": "Percent",
+   "label": "Member Discount (%)"
+  },
+  {
+   "fieldname": "pricing_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "0 = unlimited.",
+   "fieldname": "max_participants",
+   "fieldtype": "Int",
+   "label": "Max Participants"
+  },
+  {
+   "description": "Participants still in the session (players who left are excluded).",
+   "fieldname": "current_participants",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Current Participants",
+   "read_only": 1
+  },
+  {
+   "description": "Sum of the paid participants' net fees.",
+   "fieldname": "total_revenue",
+   "fieldtype": "Currency",
+   "label": "Total Revenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "courts_section",
+   "fieldtype": "Section Break",
+   "label": "Dedicated Courts"
+  },
+  {
+   "description": "These courts are blocked from normal bookings while the session is Open.",
+   "fieldname": "courts",
+   "fieldtype": "Table",
+   "label": "Courts",
+   "options": "CBT Open Play Court"
+  },
+  {
+   "fieldname": "participants_section",
+   "fieldtype": "Section Break",
+   "label": "Participants"
+  },
+  {
+   "description": "Managed from the Open Play Board — rows are never edited by hand.",
+   "fieldname": "participants",
+   "fieldtype": "Table",
+   "label": "Participants",
+   "options": "CBT Open Play Participant",
+   "read_only": 1
+  },
+  {
+   "fieldname": "queue_section",
+   "fieldtype": "Section Break",
+   "label": "Rotation Queue"
+  },
+  {
+   "description": "Managed from the Open Play Board — rows are never edited by hand.",
+   "fieldname": "queue",
+   "fieldtype": "Table",
+   "label": "Queue",
+   "options": "CBT Open Play Queue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assignments_section",
+   "fieldtype": "Section Break",
+   "label": "Court Assignments"
+  },
+  {
+   "description": "Managed from the Open Play Board — rows are never edited by hand.",
+   "fieldname": "assignments",
+   "fieldtype": "Table",
+   "label": "Assignments",
+   "options": "CBT Open Play Assignment",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Open Play",
+   "link_doctype": "CBT Payment Proof",
+   "link_fieldname": "open_play_session"
+  },
+  {
+   "group": "Open Play",
+   "link_doctype": "CBT Slot Block",
+   "link_fieldname": "open_play_session"
+  }
+ ],
+ "modified": "2026-08-27 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Court Booking Tech",
+ "name": "CBT Open Play Session",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Platform Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Admin",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CBT Company Staff",
+   "write": 1
+  }
+ ],
+ "search_fields": "title,branch,session_date",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}
